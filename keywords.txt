@@ -1,0 +1,33 @@
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+MBFunctionCode	KEYWORD1
+MBError	KEYWORD1
+MB_PDU	KEYWORD1
+MBOnData	KEYWORD1
+MBOnError	KEYWORD1
+esp32ModbusRTU	KEYWORD1
+
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+request	KEYWORD2
+onData	KEYWORD2
+onError	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+READ_COIL	LITERAL1
+READ_DISC_INPUT	LITERAL1
+READ_HOLD_REGISTER	LITERAL1
+READ_INPUT_REGISTER	LITERAL1
+WRITE_COIL	LITERAL1
+WRITE_HOLD_REGISTER	LITERAL1
+WRITE_MULT_COILS	LITERAL1
+WRITE_MULT_REGISTERS	LITERAL1

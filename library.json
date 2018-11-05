@@ -1,0 +1,22 @@
+{
+  "name": "esp32ModbusRTU",
+  "version": "0.0.1",
+  "keywords": "Arduino, ESP32, Modbus, RTU",
+  "description": "async Modbus-RTU client for ESP32",
+  "homepage": "https://github.com/bertmelis/esp32ModbusRTU",
+  "license": "MIT",
+  "authors": {
+    "name": "Bert Melis",
+    "url": "https://github.com/bertmelis",
+    "maintainer": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bertmelis/esp32ModbusRTU.git",
+    "branch": "master"
+  },
+  "frameworks": "arduino",
+  "platforms": [
+    "espressif32"
+  ]
+}
