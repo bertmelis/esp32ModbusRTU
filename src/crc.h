@@ -3,6 +3,10 @@
   MODBUS over serial line specification and implementation guide V1.02
 */
 
+#pragma once
+
+namespace esp32ModbusRTUInternals {
+
 uint16_t CRC16(uint8_t* msg, size_t len) {
   static uint8_t crcHiTable[] = {
     0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81,
@@ -47,7 +51,7 @@ uint16_t CRC16(uint8_t* msg, size_t len) {
   uint8_t crcHi = 0xFF;
   uint8_t crcLo = 0xFF;
   uint8_t index;
-  
+
   while (len--) {
     index = crcLo ^ *msg++;
     crcLo = crcHi ^ crcHiTable[index];
@@ -55,3 +59,5 @@ uint16_t CRC16(uint8_t* msg, size_t len) {
   }
   return (crcHi << 8 | crcLo);
 }
+
+}  // namespace esp32ModbusRTUInternals

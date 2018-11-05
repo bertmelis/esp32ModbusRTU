@@ -76,7 +76,7 @@ typedef std::function<void(MBError)> MBOnError;
 
 class esp32ModbusRTU {
  public:
-  esp32ModbusRTU(HardwareSerial* serial, int8_t rtsPin = -1);
+  explicit esp32ModbusRTU(HardwareSerial* serial, int8_t rtsPin = -1);
   ~esp32ModbusRTU();
   void begin();
   bool request(uint8_t serverAddress, MBFunctionCode fc, uint16_t addr, uint16_t len, uint8_t* val = nullptr);

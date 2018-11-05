@@ -24,7 +24,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #pragma once
 
-namespace esp32ModbusTCPInternals {
+namespace esp32ModbusRTUInternals {
 
 uint8_t low(uint16_t in) {
   return (in & 0xff);
@@ -38,4 +38,4 @@ uint16_t make_register(uint8_t high, uint8_t low) {
   return (low | (high << 8));
 }
 
-}  // namespace esp32ModbusTCPInternals
+}  // namespace esp32ModbusRTUInternals

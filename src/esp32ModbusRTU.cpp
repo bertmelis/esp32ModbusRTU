@@ -80,11 +80,11 @@ void esp32ModbusRTU::_handleConnection(esp32ModbusRTU* instance) {
     xQueueReceive(instance->_queue, &mb_pdu, portMAX_DELAY);  // wait for queued item
     txBuffer[0] = mb_pdu.serverAddress;
     txBuffer[1] = mb_pdu.functionCode;
-    txBuffer[2] = esp32ModbusTCPInternals::high(mb_pdu.address);
-    txBuffer[3] = esp32ModbusTCPInternals::low(mb_pdu.address);
-    txBuffer[4] = esp32ModbusTCPInternals::high(mb_pdu.length);
-    txBuffer[5] = esp32ModbusTCPInternals::low(mb_pdu.length);
-    uint16_t crc = CRC16(txBuffer, 6);
+    txBuffer[2] = esp32ModbusRTUInternals::high(mb_pdu.address);
+    txBuffer[3] = esp32ModbusRTUInternals::low(mb_pdu.address);
+    txBuffer[4] = esp32ModbusRTUInternals::high(mb_pdu.length);
+    txBuffer[5] = esp32ModbusRTUInternals::low(mb_pdu.length);
+    uint16_t crc = esp32ModbusRTUInternals::CRC16(txBuffer, 6);
     memcpy(&txBuffer[6], &crc, 2);
 
     while (instance->_serial->available()) instance->_serial->read();  // clear TX buffer
