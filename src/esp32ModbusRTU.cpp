@@ -23,17 +23,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include "esp32ModbusRTU.h"
-#include "Helpers.h"
-extern "C" {
-  #include "crc.h"
-}
 
 esp32ModbusRTU::esp32ModbusRTU(HardwareSerial* serial, int8_t rtsPin) :
   _serial(serial),
+  _lastMillis(0),
+  _interval(0),
   _rtsPin(rtsPin),
   _task(nullptr),
   _queue(nullptr) {
-    _queue = xQueueCreate(QUEUE_SIZE, sizeof(MB_PDU));
+    _queue = xQueueCreate(QUEUE_SIZE, sizeof(ModbusRequest*));
 }
 
 esp32ModbusRTU::~esp32ModbusRTU() {
@@ -47,11 +45,14 @@ void esp32ModbusRTU::begin() {
   pinMode(_rtsPin, OUTPUT);
   digitalWrite(_rtsPin, LOW);
   xTaskCreate((TaskFunction_t)&_handleConnection, "esp32ModbusRTU", 4096, this, 5, &_task);
+  // silent interval is at least 3.5x character time
+  _interval = 40000 / _serial->baudRate();  // 4 * 1000 * 10 / baud
+  if (_interval == 0) _interval = 1;  // minimum of 1msec interval
 }
 
-bool esp32ModbusRTU::request(uint8_t serverAddress, MBFunctionCode fc, uint16_t addr, uint16_t len, uint8_t* val) {
-  MB_PDU mb_pdu = {serverAddress, fc, addr, len, val};
-  if (xQueueSend(_queue, reinterpret_cast<void*>(&mb_pdu), (TickType_t)0) != pdPASS) {
+bool esp32ModbusRTU::readInputRegister(uint8_t slaveAddress, uint16_t address, uint16_t byteCount) {
+  ModbusRequest* request = new ModbusRequest04(slaveAddress, address, byteCount);
+  if (xQueueSend(_queue, reinterpret_cast<void*>(&request), (TickType_t)0) != pdPASS) {
     return false;
   }
   return true;
@@ -67,60 +68,44 @@ void esp32ModbusRTU::onError(MBOnError handler) {
 
 void esp32ModbusRTU::_handleConnection(esp32ModbusRTU* instance) {
   while (1) {
-    MB_PDU mb_pdu;
-    static uint8_t index = 0;
-    static uint32_t lastMillis = 0;
-    // uint32_t baudRate = _serial->baudRate();
-    // silent Time is at least 3.5x character time, @9600baud = 3.5 x 1000 / 9600 msec = 0.36msec. taking 1msec
-    static uint32_t interval = 1;
-    static uint8_t rxBuffer[256];
-    static uint8_t txBuffer[256];
-    memset(rxBuffer, 0, sizeof(rxBuffer));
-
-    xQueueReceive(instance->_queue, &mb_pdu, portMAX_DELAY);  // wait for queued item
-    txBuffer[0] = mb_pdu.serverAddress;
-    txBuffer[1] = mb_pdu.functionCode;
-    txBuffer[2] = esp32ModbusRTUInternals::high(mb_pdu.address);
-    txBuffer[3] = esp32ModbusRTUInternals::low(mb_pdu.address);
-    txBuffer[4] = esp32ModbusRTUInternals::high(mb_pdu.length);
-    txBuffer[5] = esp32ModbusRTUInternals::low(mb_pdu.length);
-    uint16_t crc = esp32ModbusRTUInternals::CRC16(txBuffer, 6);
-    memcpy(&txBuffer[6], &crc, 2);
-
-    while (instance->_serial->available()) instance->_serial->read();  // clear TX buffer
-    while (millis() - lastMillis < interval) delay(1);  // only start after 3.5 char pause
-    digitalWrite(instance->_rtsPin, HIGH);
-    instance->_serial->write(txBuffer, 8);
-    instance->_serial->flush();
-    delay(3);  // TODO(bertmelis): base delay on baudrate
-    digitalWrite(instance->_rtsPin, LOW);
-    lastMillis = millis();
-
-    // read data, return on timeout or on complete message
-    index = 0;
-    MBError error = SUCCES;
-    while (true) {
-      if (instance->_serial->available()) {
-        rxBuffer[index++] = instance->_serial->read();
-      }
-      if (index == (5 + rxBuffer[2])) {
-        // message complete
-        lastMillis = millis();
-        // TOTO(bertmelis): error checking
-        // 1. CRC
-        // 2. returned FC
-        // 3. match with request
-        if (error == SUCCES) {
-          if (instance->_onData) instance->_onData(rxBuffer[0], static_cast<MBFunctionCode>(rxBuffer[1]), &rxBuffer[3], rxBuffer[2]);
-        } else {
-          if (instance->_onError) instance->_onError(error);
-        }
-        break;
-      }
-      if (millis() - lastMillis > TIMEOUT_MS) {
-        if (instance->_onError) instance->_onError(TIMEOUT);
-        break;
-      }
+    ModbusRequest* request;
+    xQueueReceive(instance->_queue, &request, portMAX_DELAY);  // block and wait for queued item
+    instance->_send(request->getMessage(), request->getSize());
+    ModbusResponse* response = instance->_receive(request);
+    if (response->isSucces()) {
+      if (instance->_onData) instance->_onData(response->getSlaveAddress(), response->getFunctionCode(), response->getData(), response->getByteCount());
+    } else {
+      if (instance->_onError) instance->_onError(response->getError());
     }
+    delete request;  // object created in public methods
+    delete response;  // object created in _receive()
   }
+}
+
+void esp32ModbusRTU::_send(uint8_t* data, uint8_t length) {
+  while (millis() - _lastMillis < _interval) delay(1);  // respect _interval
+  digitalWrite(_rtsPin, HIGH);
+  _serial->write(data, length);
+  _serial->flush();
+  delay(1);  // TODO(bertmelis): base delay on baudrate or wait for #PR2029 in Arduino for esp32
+  digitalWrite(_rtsPin, LOW);
+  _lastMillis = millis();
+}
+
+ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
+  ModbusResponse* response = request->makeResponse();
+  while (true) {
+    while (_serial->available()) {
+      response->add(_serial->read());
+    }
+    if (response->isComplete()) {
+      _lastMillis = millis();
+      break;
+    }
+    if (millis() - _lastMillis > TIMEOUT_MS) {
+      break;
+    }
+    delay(1);  // take care of watchdog
+  }
+  return response;
 }

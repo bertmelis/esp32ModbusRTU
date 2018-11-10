@@ -24,8 +24,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #pragma once
 
+#ifndef QUEUE_SIZE
 #define QUEUE_SIZE 20
-#define TIMEOUT_MS 10000
+#endif
+#ifndef TIMEOUT_MS
+#define TIMEOUT_MS 5000
+#endif
 
 #include <functional>
 
@@ -37,41 +41,9 @@ extern "C" {
 #include <HardwareSerial.h>
 #include <esp32-hal-gpio.h>
 
-enum MBFunctionCode : uint8_t {
-  READ_COIL            = 0x01,
-  READ_DISC_INPUT      = 0x02,
-  READ_HOLD_REGISTER   = 0x03,
-  READ_INPUT_REGISTER  = 0x04,
-  WRITE_COIL           = 0x05,
-  WRITE_HOLD_REGISTER  = 0x06,
-  WRITE_MULT_COILS     = 0x0F,
-  WRITE_MULT_REGISTERS = 0x10
-};
+#include "ModbusMessage.h"
 
-enum MBError : uint8_t {
-  SUCCES                = 0x00,
-  ILLEGAL_FUNCTION      = 0x01,
-  ILLEGAL_DATA_ADDRESS  = 0x02,
-  ILLEGAL_DATA_VALUE    = 0x03,
-  SERVER_DEVICE_FAILURE = 0x04,
-  ACKNOWLEDGE           = 0x05,
-  SERVER_DEVICE_BUSY    = 0x06,
-  NEGATIVE_ACKNOWLEDGE  = 0x07,
-  MEMORY_PARITY_ERROR   = 0x08,
-  TIMEOUT               = 0xE0,
-  INVALID_SLAVE         = 0xE1,
-  INVALUD_FUNCTION      = 0xE2
-};
-
-struct MB_PDU {
-  uint8_t serverAddress;
-  MBFunctionCode functionCode;
-  uint16_t address;
-  uint16_t length;
-  uint8_t* value;
-};
-
-typedef std::function<void(uint8_t, MBFunctionCode, uint8_t*, size_t)> MBOnData;
+typedef std::function<void(uint8_t, MBFunctionCode, uint8_t*, uint16_t)> MBOnData;
 typedef std::function<void(MBError)> MBOnError;
 
 class esp32ModbusRTU {
@@ -79,16 +51,22 @@ class esp32ModbusRTU {
   explicit esp32ModbusRTU(HardwareSerial* serial, int8_t rtsPin = -1);
   ~esp32ModbusRTU();
   void begin();
-  bool request(uint8_t serverAddress, MBFunctionCode fc, uint16_t addr, uint16_t len, uint8_t* val = nullptr);
+  bool readInputRegister(uint8_t slaveAddress, uint16_t address, uint16_t byteCount);
   void onData(MBOnData handler);
   void onError(MBOnError handler);
 
  private:
+  static void _handleConnection(esp32ModbusRTU* instance);
+  void _send(uint8_t* data, uint8_t length);
+  ModbusResponse* _receive(ModbusRequest* request);
+
+ private:
   HardwareSerial* _serial;
+  uint32_t _lastMillis;
+  uint32_t _interval;
   int8_t _rtsPin;
   TaskHandle_t _task;
   QueueHandle_t _queue;
-  static void _handleConnection(esp32ModbusRTU* instance);
   MBOnData _onData;
   MBOnError _onError;
 };
