@@ -5,7 +5,7 @@
 # WORK IN PROGRESS - Current status:
 
 - it is working
-- only RS485 half duplex with GPIO as RTS (DE/RS) pin. connections are implemented
+- only RS485 half duplex using a GPIO as RTS (DE/RS) is implemented
 - only function code 04 is implemented (others will be there soon)
 - async operation. blocking code is in a seperate task
 - error codes are implemented but untested (somehow my device just tries to answer all the time instead of generating a Modbus error)
