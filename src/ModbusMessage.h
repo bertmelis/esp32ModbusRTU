@@ -27,32 +27,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdint.h>  // for uint*_t
 #include <stddef.h>  // for size_t
 
-enum MBFunctionCode : uint8_t {
-  READ_COIL            = 0x01,
-  READ_DISC_INPUT      = 0x02,
-  READ_HOLD_REGISTER   = 0x03,
-  READ_INPUT_REGISTER  = 0x04,
-  WRITE_COIL           = 0x05,
-  WRITE_HOLD_REGISTER  = 0x06,
-  WRITE_MULT_COILS     = 0x0F,
-  WRITE_MULT_REGISTERS = 0x10
-};
+#include "esp32ModbusTypeDefs.h"
 
-enum MBError : uint8_t {
-  SUCCES                = 0x00,
-  ILLEGAL_FUNCTION      = 0x01,
-  ILLEGAL_DATA_ADDRESS  = 0x02,
-  ILLEGAL_DATA_VALUE    = 0x03,
-  SERVER_DEVICE_FAILURE = 0x04,
-  ACKNOWLEDGE           = 0x05,
-  SERVER_DEVICE_BUSY    = 0x06,
-  NEGATIVE_ACKNOWLEDGE  = 0x07,
-  MEMORY_PARITY_ERROR   = 0x08,
-  TIMEOUT               = 0xE0,
-  INVALID_SLAVE         = 0xE1,
-  INVALID_FUNCTION      = 0xE2,
-  CRC_ERROR             = 0xE3
-};
+using namespace esp32Modbus;  // NOLINT
 
 class ModbusMessage {
  public:

@@ -41,10 +41,10 @@ extern "C" {
 #include <HardwareSerial.h>
 #include <esp32-hal-gpio.h>
 
+#include "esp32ModbusTypeDefs.h"
 #include "ModbusMessage.h"
 
-typedef std::function<void(uint8_t, MBFunctionCode, uint8_t*, uint16_t)> MBOnData;
-typedef std::function<void(MBError)> MBOnError;
+using namespace esp32Modbus;  // NOLINT
 
 class esp32ModbusRTU {
  public:
