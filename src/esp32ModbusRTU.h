@@ -52,7 +52,7 @@ class esp32ModbusRTU {
   ~esp32ModbusRTU();
   void begin();
   bool readInputRegister(uint8_t slaveAddress, uint16_t address, uint16_t byteCount);
-  void onData(MBOnData handler);
+  void onData(MBRTUOnData handler);
   void onError(MBOnError handler);
 
  private:
@@ -67,6 +67,6 @@ class esp32ModbusRTU {
   int8_t _rtsPin;
   TaskHandle_t _task;
   QueueHandle_t _queue;
-  MBOnData _onData;
+  MBRTUOnData _onData;
   MBOnError _onError;
 };

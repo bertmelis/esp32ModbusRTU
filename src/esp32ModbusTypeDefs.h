@@ -57,7 +57,8 @@ enum MBError : uint8_t {
   COMM_ERROR            = 0xE4  // general communication error
 };
 
-typedef std::function<void(uint8_t, MBFunctionCode, uint8_t*, uint16_t)> MBOnData;
+typedef std::function<void(uint16_t, uint8_t, MBFunctionCode, uint8_t*, uint16_t)> MBTCPOnData;
+typedef std::function<void(uint8_t, MBFunctionCode, uint8_t*, uint16_t)> MBRTUOnData;
 typedef std::function<void(MBError)> MBOnError;
 
 }  // namespace esp32Modbus

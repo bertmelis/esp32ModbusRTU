@@ -58,7 +58,7 @@ bool esp32ModbusRTU::readInputRegister(uint8_t slaveAddress, uint16_t address, u
   return true;
 }
 
-void esp32ModbusRTU::onData(MBOnData handler) {
+void esp32ModbusRTU::onData(MBRTUOnData handler) {
   _onData = handler;
 }
 
