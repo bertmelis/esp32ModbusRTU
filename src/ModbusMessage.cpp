@@ -132,28 +132,68 @@ ModbusRequest::ModbusRequest(uint8_t length) :
   _address(0),
   _byteCount(0) {}
 
-ModbusRequest04::ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_t byteCount) :
+ModbusRequest02::ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils) :
   ModbusRequest(8) {
   _slaveAddress = slaveAddress;
-  _functionCode = READ_INPUT_REGISTER;
+  _functionCode = READ_DISCR_INPUT;
   _address = address;
-  _byteCount = byteCount;
+  _byteCount = numberCoils / 8 + 1;
   add(_slaveAddress);
   add(_functionCode);
   add(high(_address));
   add(low(_address));
-  add(high(_byteCount));
-  add(low(_byteCount));
+  add(high(numberCoils));
+  add(low(numberCoils));
   uint16_t CRC = CRC16(_buffer, 6);
   add(low(CRC));
   add(high(CRC));
 }
 
-ModbusResponse* ModbusRequest04::makeResponse() {
+size_t ModbusRequest02::responseLength() {
+  return 5 + _byteCount;
+}
+
+ModbusRequest03::ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters) :
+  ModbusRequest(12) {
+  _slaveAddress = slaveAddress;
+  _functionCode = READ_HOLD_REGISTER;
+  _address = address;
+  _byteCount = numberRegisters * 2;  // register is 2 bytes wide
+  add(_slaveAddress);
+  add(_functionCode);
+  add(high(_address));
+  add(low(_address));
+  add(high(numberRegisters));
+  add(low(numberRegisters));
+  uint16_t CRC = CRC16(_buffer, 6);
+  add(low(CRC));
+  add(high(CRC));
+}
+
+size_t ModbusRequest03::responseLength() {
+  return 5 + _byteCount;
+}
+
+ModbusRequest04::ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters) :
+  ModbusRequest(8) {
+  _slaveAddress = slaveAddress;
+  _functionCode = READ_INPUT_REGISTER;
+  _address = address;
+  _byteCount = numberRegisters * 2;  // register is 2 bytes wide
+  add(_slaveAddress);
+  add(_functionCode);
+  add(high(_address));
+  add(low(_address));
+  add(high(numberRegisters));
+  add(low(numberRegisters));
+  uint16_t CRC = CRC16(_buffer, 6);
+  add(low(CRC));
+  add(high(CRC));
+}
+
+size_t ModbusRequest04::responseLength() {
   // slaveAddress (1) + functionCode (1) + byteCount (1) + length x 2 + CRC (2)
-  uint8_t responseLength = 3 + (_byteCount * 2) + 2;
-  ModbusResponse* response = new ModbusResponse(responseLength, this);
-  return response;
+  return 5 + _byteCount;
 }
 
 ModbusResponse::ModbusResponse(uint8_t length, ModbusRequest* request) :
@@ -165,9 +205,7 @@ bool ModbusResponse::isComplete() {
   if (_buffer[1] > 0x80 && _index == 4) {  // 4: slaveAddress(1), errorCode(1), CRC(2)
     return true;
   }
-  if (_index > _buffer[2] + 4) {
-    return true;
-  }
+  if (_index == _request->responseLength()) return true;
   return false;
 }
 
@@ -191,7 +229,7 @@ bool ModbusResponse::isSucces() {
 
 bool ModbusResponse::checkCRC() {
   uint16_t CRC = CRC16(_buffer, _length - 2);
-  if (low(CRC) == _buffer[_length - 2] && high(CRC) == _buffer[_length -1 ]) {
+  if (low(CRC) == _buffer[_length - 2] && high(CRC) == _buffer[_length -1]) {
     return true;
   } else {
     return false;

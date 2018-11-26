@@ -50,8 +50,23 @@ void esp32ModbusRTU::begin() {
   if (_interval == 0) _interval = 1;  // minimum of 1msec interval
 }
 
-bool esp32ModbusRTU::readInputRegister(uint8_t slaveAddress, uint16_t address, uint16_t byteCount) {
-  ModbusRequest* request = new ModbusRequest04(slaveAddress, address, byteCount);
+bool esp32ModbusRTU::readDiscreteInputs(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils) {
+  ModbusRequest* request = new ModbusRequest02(slaveAddress, address, numberCoils);
+  if (xQueueSend(_queue, reinterpret_cast<void*>(&request), (TickType_t)0) != pdPASS) {
+    return false;
+  }
+  return true;
+}
+bool esp32ModbusRTU::readHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters) {
+  ModbusRequest* request = new ModbusRequest03(slaveAddress, address, numberRegisters);
+  if (xQueueSend(_queue, reinterpret_cast<void*>(&request), (TickType_t)0) != pdPASS) {
+    return false;
+  }
+  return true;
+}
+
+bool esp32ModbusRTU::readInputRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters) {
+  ModbusRequest* request = new ModbusRequest04(slaveAddress, address, numberRegisters);
   if (xQueueSend(_queue, reinterpret_cast<void*>(&request), (TickType_t)0) != pdPASS) {
     return false;
   }
@@ -93,7 +108,7 @@ void esp32ModbusRTU::_send(uint8_t* data, uint8_t length) {
 }
 
 ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
-  ModbusResponse* response = request->makeResponse();
+  ModbusResponse* response = new ModbusResponse(request->responseLength(), request);
   while (true) {
     while (_serial->available()) {
       response->add(_serial->read());

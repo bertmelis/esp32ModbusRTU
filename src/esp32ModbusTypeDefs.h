@@ -31,7 +31,7 @@ namespace esp32Modbus {
 
 enum MBFunctionCode : uint8_t {
   READ_COIL            = 0x01,
-  READ_DISC_INPUT      = 0x02,
+  READ_DISCR_INPUT     = 0x02,
   READ_HOLD_REGISTER   = 0x03,
   READ_INPUT_REGISTER  = 0x04,
   WRITE_COIL           = 0x05,

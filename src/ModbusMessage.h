@@ -49,7 +49,7 @@ class ModbusResponse;  // forward declare for use in ModbusRequest
 
 class ModbusRequest : public ModbusMessage {
  public:
-  virtual ModbusResponse* makeResponse() = 0;
+  virtual size_t responseLength() = 0;
 
  protected:
   explicit ModbusRequest(uint8_t length);
@@ -59,10 +59,25 @@ class ModbusRequest : public ModbusMessage {
   uint16_t _byteCount;
 };
 
+// read discrete coils
+class ModbusRequest02 : public ModbusRequest {
+ public:
+  explicit ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils);
+  size_t responseLength();
+};
+
+// read holding registers
+class ModbusRequest03 : public ModbusRequest {
+ public:
+  explicit ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters);
+  size_t responseLength();
+};
+
+// read input registers
 class ModbusRequest04 : public ModbusRequest {
  public:
-  explicit ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_t byteCount);
-  ModbusResponse* makeResponse();
+  explicit ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters);
+  size_t responseLength();
 };
 
 class ModbusResponse : public ModbusMessage {
