@@ -39,6 +39,6 @@ void loop() {
   if (millis() - lastMillis > 30000) {
     lastMillis = millis();
     Serial.print("sending Modbus request...\n");
-    modbus.readInputRegister(0x01, 52, 2);
+    modbus.readInputRegisters(0x01, 52, 2);
   }
 }
