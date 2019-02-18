@@ -102,7 +102,6 @@ void esp32ModbusRTU::_send(uint8_t* data, uint8_t length) {
   digitalWrite(_rtsPin, HIGH);
   _serial->write(data, length);
   _serial->flush();
-  delay(1);  // TODO(bertmelis): base delay on baudrate or wait for #PR2029 in Arduino for esp32
   digitalWrite(_rtsPin, LOW);
   _lastMillis = millis();
 }
