@@ -18,7 +18,7 @@ void setup() {
   Serial.begin(115200);  // Serial output
   Serial1.begin(9600, SERIAL_8N1, 17, 4, true);  // Modbus connection
 
-  modbus.onData([](uint8_t serverAddress, MBFunctionCode fc, uint8_t* data, size_t length) {
+  modbus.onData([](uint8_t serverAddress, esp32Modbus::FunctionCode fc, uint8_t* data, size_t length) {
     Serial.printf("id 0x%02x fc 0x%02x len %u: 0x", serverAddress, fc, length);
     for (size_t i = 0; i < length; ++i) {
       Serial.printf("%02x", data[i]);
@@ -27,7 +27,7 @@ void setup() {
     Serial.printf("\nval: %.2f", *reinterpret_cast<float*>(data));
     Serial.print("\n\n");
   });
-  modbus.onError([](MBError error) {
+  modbus.onError([](esp32Modbus::Error error) {
     Serial.printf("error: 0x%02x\n\n", static_cast<uint8_t>(error));
   });
   modbus.begin();

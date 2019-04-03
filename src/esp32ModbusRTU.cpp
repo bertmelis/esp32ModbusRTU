@@ -54,25 +54,16 @@ void esp32ModbusRTU::begin() {
 
 bool esp32ModbusRTU::readDiscreteInputs(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils) {
   ModbusRequest* request = new ModbusRequest02(slaveAddress, address, numberCoils);
-  if (xQueueSend(_queue, reinterpret_cast<void*>(&request), (TickType_t)0) != pdPASS) {
-    return false;
-  }
-  return true;
+  return _addToQueue(request);
 }
 bool esp32ModbusRTU::readHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters) {
   ModbusRequest* request = new ModbusRequest03(slaveAddress, address, numberRegisters);
-  if (xQueueSend(_queue, reinterpret_cast<void*>(&request), (TickType_t)0) != pdPASS) {
-    return false;
-  }
-  return true;
+  return _addToQueue(request);
 }
 
 bool esp32ModbusRTU::readInputRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters) {
   ModbusRequest* request = new ModbusRequest04(slaveAddress, address, numberRegisters);
-  if (xQueueSend(_queue, reinterpret_cast<void*>(&request), (TickType_t)0) != pdPASS) {
-    return false;
-  }
-  return true;
+  return _addToQueue(request);
 }
 
 void esp32ModbusRTU::onData(esp32Modbus::MBRTUOnData handler) {
@@ -81,6 +72,16 @@ void esp32ModbusRTU::onData(esp32Modbus::MBRTUOnData handler) {
 
 void esp32ModbusRTU::onError(esp32Modbus::MBRTUOnError handler) {
   _onError = handler;
+}
+
+bool esp32ModbusRTU::_addToQueue(ModbusRequest* request) {
+  if (!request) {
+    return false;
+  } else if (xQueueSend(_queue, reinterpret_cast<void*>(&request), (TickType_t)0) != pdPASS) {
+    delete request;
+    return false;
+  } else {
+    return true;
 }
 
 void esp32ModbusRTU::_handleConnection(esp32ModbusRTU* instance) {
