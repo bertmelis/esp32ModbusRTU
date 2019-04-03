@@ -31,6 +31,8 @@ MODBUS over serial line specification and implementation guide V1.02
 
 #include "ModbusMessage.h"
 
+using namespace esp32ModbusRTUInternals;  // NOLINT
+
 static uint8_t crcHiTable[] = {
   0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81,
   0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
@@ -135,7 +137,7 @@ ModbusRequest::ModbusRequest(uint8_t length) :
 ModbusRequest02::ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils) :
   ModbusRequest(8) {
   _slaveAddress = slaveAddress;
-  _functionCode = READ_DISCR_INPUT;
+  _functionCode = esp32Modbus::READ_DISCR_INPUT;
   _address = address;
   _byteCount = numberCoils / 8 + 1;
   add(_slaveAddress);
@@ -156,7 +158,7 @@ size_t ModbusRequest02::responseLength() {
 ModbusRequest03::ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters) :
   ModbusRequest(12) {
   _slaveAddress = slaveAddress;
-  _functionCode = READ_HOLD_REGISTER;
+  _functionCode = esp32Modbus::READ_HOLD_REGISTER;
   _address = address;
   _byteCount = numberRegisters * 2;  // register is 2 bytes wide
   add(_slaveAddress);
@@ -177,7 +179,7 @@ size_t ModbusRequest03::responseLength() {
 ModbusRequest04::ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters) :
   ModbusRequest(8) {
   _slaveAddress = slaveAddress;
-  _functionCode = READ_INPUT_REGISTER;
+  _functionCode = esp32Modbus::READ_INPUT_REGISTER;
   _address = address;
   _byteCount = numberRegisters * 2;  // register is 2 bytes wide
   add(_slaveAddress);
@@ -199,7 +201,7 @@ size_t ModbusRequest04::responseLength() {
 ModbusResponse::ModbusResponse(uint8_t length, ModbusRequest* request) :
   ModbusMessage(length),
   _request(request),
-  _error(SUCCES) {}
+  _error(esp32Modbus::SUCCES) {}
 
 bool ModbusResponse::isComplete() {
   if (_buffer[1] > 0x80 && _index == 4) {  // 4: slaveAddress(1), errorCode(1), CRC(2)
@@ -211,16 +213,16 @@ bool ModbusResponse::isComplete() {
 
 bool ModbusResponse::isSucces() {
   if (!isComplete()) {
-    _error = TIMEOUT;
+    _error = esp32Modbus::TIMEOUT;
   } else if (_buffer[1] > 0x80) {
-    _error = static_cast<MBError>(_buffer[1] - 0x80);
+    _error = static_cast<esp32Modbus::Error>(_buffer[1] - 0x80);
   } else if (!checkCRC()) {
-    _error = CRC_ERROR;
+    _error = esp32Modbus::CRC_ERROR;
   // TODO(bertmelis): add other checks
   } else {
-    _error = SUCCES;
+    _error = esp32Modbus::SUCCES;
   }
-  if (_error == SUCCES) {
+  if (_error == esp32Modbus::SUCCES) {
     return true;
   } else {
     return false;
@@ -236,7 +238,7 @@ bool ModbusResponse::checkCRC() {
   }
 }
 
-MBError ModbusResponse::getError() const {
+esp32Modbus::Error ModbusResponse::getError() const {
   return _error;
 }
 
@@ -244,8 +246,8 @@ uint8_t ModbusResponse::getSlaveAddress() {
   return _buffer[0];
 }
 
-MBFunctionCode ModbusResponse::getFunctionCode() {
-  return static_cast<MBFunctionCode>(_buffer[1]);
+esp32Modbus::FunctionCode ModbusResponse::getFunctionCode() {
+  return static_cast<esp32Modbus::FunctionCode>(_buffer[1]);
 }
 
 uint8_t* ModbusResponse::getData() {

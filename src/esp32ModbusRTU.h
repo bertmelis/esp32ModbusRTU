@@ -22,7 +22,8 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
+#ifndef esp32ModbusRTU_h
+#define esp32ModbusRTU_h
 
 #ifndef QUEUE_SIZE
 #define QUEUE_SIZE 20
@@ -44,8 +45,6 @@ extern "C" {
 #include "esp32ModbusTypeDefs.h"
 #include "ModbusMessage.h"
 
-using namespace esp32Modbus;  // NOLINT
-
 class esp32ModbusRTU {
  public:
   explicit esp32ModbusRTU(HardwareSerial* serial, int8_t rtsPin = -1);
@@ -54,13 +53,13 @@ class esp32ModbusRTU {
   bool readDiscreteInputs(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils);
   bool readHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters);
   bool readInputRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters);
-  void onData(MBRTUOnData handler);
-  void onError(MBOnError handler);
+  void onData(esp32Modbus::MBRTUOnData handler);
+  void onError(esp32Modbus::MBRTUOnError handler);
 
  private:
   static void _handleConnection(esp32ModbusRTU* instance);
   void _send(uint8_t* data, uint8_t length);
-  ModbusResponse* _receive(ModbusRequest* request);
+  esp32ModbusRTUInternals::ModbusResponse* _receive(esp32ModbusRTUInternals::ModbusRequest* request);
 
  private:
   HardwareSerial* _serial;
@@ -69,6 +68,8 @@ class esp32ModbusRTU {
   int8_t _rtsPin;
   TaskHandle_t _task;
   QueueHandle_t _queue;
-  MBRTUOnData _onData;
-  MBOnError _onError;
+  esp32Modbus::MBRTUOnData _onData;
+  esp32Modbus::MBRTUOnError _onError;
 };
+
+#endif

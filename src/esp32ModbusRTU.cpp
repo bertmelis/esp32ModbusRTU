@@ -24,6 +24,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "esp32ModbusRTU.h"
 
+using namespace esp32ModbusRTUInternals;  // NOLINT
+
 esp32ModbusRTU::esp32ModbusRTU(HardwareSerial* serial, int8_t rtsPin) :
   _serial(serial),
   _lastMillis(0),
@@ -73,11 +75,11 @@ bool esp32ModbusRTU::readInputRegisters(uint8_t slaveAddress, uint16_t address, 
   return true;
 }
 
-void esp32ModbusRTU::onData(MBRTUOnData handler) {
+void esp32ModbusRTU::onData(esp32Modbus::MBRTUOnData handler) {
   _onData = handler;
 }
 
-void esp32ModbusRTU::onError(MBOnError handler) {
+void esp32ModbusRTU::onError(esp32Modbus::MBRTUOnError handler) {
   _onError = handler;
 }
 

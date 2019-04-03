@@ -22,14 +22,15 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#pragma once
+#ifndef esp32ModbusRTUInternals_ModbusMessage_h
+#define esp32ModbusRTUInternals_ModbusMessage_h
 
 #include <stdint.h>  // for uint*_t
 #include <stddef.h>  // for size_t
 
 #include "esp32ModbusTypeDefs.h"
 
-using namespace esp32Modbus;  // NOLINT
+namespace esp32ModbusRTUInternals {
 
 class ModbusMessage {
  public:
@@ -86,14 +87,18 @@ class ModbusResponse : public ModbusMessage {
   bool isComplete();
   bool isSucces();
   bool checkCRC();
-  MBError getError() const;
+  esp32Modbus::Error getError() const;
 
   uint8_t getSlaveAddress();
-  MBFunctionCode getFunctionCode();
+  esp32Modbus::FunctionCode getFunctionCode();
   uint8_t* getData();
   uint8_t getByteCount();
 
  private:
   ModbusRequest* _request;
-  MBError _error;
+  esp32Modbus::Error _error;
 };
+
+}  // namespace esp32ModbusRTUInternals
+
+#endif
