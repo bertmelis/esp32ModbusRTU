@@ -57,7 +57,7 @@ class esp32ModbusRTU {
   void onError(esp32Modbus::MBRTUOnError handler);
 
  private:
-  bool _addToQueue(ModbusRequest* request);
+  bool _addToQueue(esp32ModbusRTUInternals::ModbusRequest* request);
   static void _handleConnection(esp32ModbusRTU* instance);
   void _send(uint8_t* data, uint8_t length);
   esp32ModbusRTUInternals::ModbusResponse* _receive(esp32ModbusRTUInternals::ModbusRequest* request);

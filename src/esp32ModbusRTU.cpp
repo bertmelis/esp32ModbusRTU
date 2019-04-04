@@ -82,6 +82,7 @@ bool esp32ModbusRTU::_addToQueue(ModbusRequest* request) {
     return false;
   } else {
     return true;
+  }
 }
 
 void esp32ModbusRTU::_handleConnection(esp32ModbusRTU* instance) {
