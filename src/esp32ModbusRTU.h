@@ -25,7 +25,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef esp32ModbusRTU_h
 #define esp32ModbusRTU_h
 
-#if defined ARDUINO_ARCH_ESP8266 || ARDUINO_ARCH_ESP32
+#if defined ARDUINO_ARCH_ESP32
 
 #ifndef QUEUE_SIZE
 #define QUEUE_SIZE 20
@@ -77,7 +77,7 @@ class esp32ModbusRTU {
 
 #endif
 
-#elif defined ESP32MODBUSRTU_TEST
+#elif defined VITOWIFI_TEST
 
 #else
 

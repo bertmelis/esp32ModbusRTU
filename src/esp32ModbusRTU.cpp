@@ -24,7 +24,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "esp32ModbusRTU.h"
 
-#if defined ARDUINO_ARCH_ESP8266 || ARDUINO_ARCH_ESP32
+#if defined ARDUINO_ARCH_ESP32
 
 using namespace esp32ModbusRTUInternals;  // NOLINT
 
@@ -130,7 +130,9 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
   return response;
 }
 
-#elif defined ESP32MODBUSRTU_TEST
+#endif
+
+#elif defined VITOWIFI_TEST
 
 #else
 
