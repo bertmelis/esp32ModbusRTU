@@ -215,7 +215,7 @@ bool ModbusResponse::isSucces() {
   if (!isComplete()) {
     _error = esp32Modbus::TIMEOUT;
   } else if (_buffer[1] > 0x80) {
-    _error = static_cast<esp32Modbus::Error>(_buffer[1] - 0x80);
+    _error = static_cast<esp32Modbus::Error>(_buffer[2]);
   } else if (!checkCRC()) {
     _error = esp32Modbus::CRC_ERROR;
   // TODO(bertmelis): add other checks
