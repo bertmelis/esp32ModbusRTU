@@ -130,9 +130,7 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
   return response;
 }
 
-#endif
-
-#elif defined VITOWIFI_TEST
+#elif defined ESP32MODBUSRTU_TEST
 
 #else
 

@@ -10,7 +10,7 @@ jobs:
     - name: "cpplint"
       script:
         - pip install -U cpplint
-        - cpplint --repository=. --recursive --linelength=200 --filter=-build/include,build/header_guard  ./src
+        - cpplint --repository=. --recursive --linelength=200 --filter=-build/include,-build/header_guard  ./src
     - name: "cppcheck"
       addons:
         apt:
