@@ -24,6 +24,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "esp32ModbusRTU.h"
 
+#if defined ARDUINO_ARCH_ESP32
+
 using namespace esp32ModbusRTUInternals;  // NOLINT
 
 esp32ModbusRTU::esp32ModbusRTU(HardwareSerial* serial, int8_t rtsPin) :
@@ -127,3 +129,11 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
   }
   return response;
 }
+
+#elif defined ESP32MODBUSRTU_TEST
+
+#else
+
+#pragma message "no suitable platform"
+
+#endif
