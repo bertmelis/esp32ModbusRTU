@@ -204,7 +204,7 @@ ModbusResponse::ModbusResponse(uint8_t length, ModbusRequest* request) :
   _error(esp32Modbus::SUCCES) {}
 
 bool ModbusResponse::isComplete() {
-  if (_buffer[1] > 0x80 && _index == 4) {  // 4: slaveAddress(1), errorCode(1), CRC(2)
+  if (_buffer[1] > 0x80 && _index == 5) {  // 4: slaveAddress(1), errorCode(1), CRC(2) + 
     return true;
   }
   if (_index == _request->responseLength()) return true;
@@ -215,7 +215,7 @@ bool ModbusResponse::isSucces() {
   if (!isComplete()) {
     _error = esp32Modbus::TIMEOUT;
   } else if (_buffer[1] > 0x80) {
-    _error = static_cast<esp32Modbus::Error>(_buffer[1] - 0x80);
+    _error = static_cast<esp32Modbus::Error>(_buffer[2]);
   } else if (!checkCRC()) {
     _error = esp32Modbus::CRC_ERROR;
   // TODO(bertmelis): add other checks

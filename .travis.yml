@@ -1,23 +1,48 @@
 language: python
-python:
-    - "2.7"
+os: linux
+dist: trusty
 
-# Cache PlatformIO packages using Travis CI container-based infrastructure
-cache:
-    directories:
-        - "~/.platformio"
+before_install:
+  - sudo apt-get update
 
-env:
-    - PLATFORMIO_CI_SRC=examples/SDM630/SDM630.ino
-    - CPPLINT=true
-
-install:
-    - pip install -U platformio
-    - pip install -U cpplint
-    - platformio lib -g install file://.
-
-script:
-    - if [[ "$CPPLINT" ]]; then cpplint --repository=. --recursive --linelength=200 --filter=-build/include,-build/header_guard ./src; else platformio ci --lib="." --board=lolin32; fi
+jobs:
+  include:
+    - name: "cpplint"
+      script:
+        - pip install -U cpplint
+        - cpplint --repository=. --recursive --linelength=200 --filter=-build/include  ./src
+    - name: "cppcheck"
+      addons:
+        apt:
+          packages:
+            - cppcheck
+      script:
+        - cppcheck --error-exitcode=1 --enable=warning,style,performance,portability -DARDUINO_ARCH_ESP32=1 ./src
+    - name: "Test"
+      script:
+        - pip install -U platformio
+        - platformio update
+        - rm -rf build
+        - mkdir build
+        - platformio ci --lib="./src" --project-conf="scripts/platformio.ini" --build-dir=build --keep-build-dir tests
+        - ./build/.pioenvs/catch2/program
+    - name: "Memcheck"
+      addons:
+        apt:
+          packages:
+            - valgrind
+      script:
+        - pip install -U platformio
+        - platformio update
+        - rm -rf build
+        - mkdir build
+        - platformio ci --lib="./src" --project-conf="scripts/platformio.ini" --build-dir=build --keep-build-dir tests
+        - valgrind --leak-check=full ./build/.pioenvs/catch2/program
+    - name: "Build examples"
+      before_install:
+        - chmod +x ./scripts/build_examples.sh
+      script:
+        - ./scripts/build_examples.sh
 
 notifications:
   email:
