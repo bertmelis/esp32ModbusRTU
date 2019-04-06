@@ -55,6 +55,7 @@ class esp32ModbusRTU {
   bool readDiscreteInputs(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils);
   bool readHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters);
   bool readInputRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters);
+  bool writeMultHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data);
   void onData(esp32Modbus::MBRTUOnData handler);
   void onError(esp32Modbus::MBRTUOnError handler);
 
