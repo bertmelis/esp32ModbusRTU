@@ -137,7 +137,7 @@ ModbusRequest::ModbusRequest(uint8_t length) :
   uint16_t ModbusRequest::getAddress() {
   return _address;
 }
-  
+
 ModbusRequest02::ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils) :
   ModbusRequest(8) {
   _slaveAddress = slaveAddress;
