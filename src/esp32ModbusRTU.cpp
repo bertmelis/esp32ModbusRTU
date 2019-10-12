@@ -99,7 +99,7 @@ void esp32ModbusRTU::_handleConnection(esp32ModbusRTU* instance) {
     instance->_send(request->getMessage(), request->getSize());
     ModbusResponse* response = instance->_receive(request);
     if (response->isSucces()) {
-      if (instance->_onData) instance->_onData(response->getSlaveAddress(), response->getFunctionCode(), response->getData(), response->getByteCount());
+      if (instance->_onData) instance->_onData(response->getSlaveAddress(), response->getFunctionCode(), request->getAddress(), response->getData(), response->getByteCount());
     } else {
       if (instance->_onError) instance->_onError(response->getError());
     }

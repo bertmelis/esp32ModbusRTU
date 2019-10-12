@@ -61,7 +61,7 @@ enum Error : uint8_t {
 };
 
 typedef std::function<void(uint16_t, uint8_t, esp32Modbus::FunctionCode, uint8_t*, uint16_t)> MBTCPOnData;
-typedef std::function<void(uint8_t, esp32Modbus::FunctionCode, uint8_t*, uint16_t)> MBRTUOnData;
+typedef std::function<void(uint8_t, esp32Modbus::FunctionCode, uint16_t, uint8_t*, uint16_t)> MBRTUOnData;
 typedef std::function<void(uint16_t, esp32Modbus::Error)> MBTCPOnError;
 typedef std::function<void(esp32Modbus::Error)> MBRTUOnError;
 

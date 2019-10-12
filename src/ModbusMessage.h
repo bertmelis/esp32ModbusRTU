@@ -51,6 +51,7 @@ class ModbusResponse;  // forward declare for use in ModbusRequest
 class ModbusRequest : public ModbusMessage {
  public:
   virtual size_t responseLength() = 0;
+  uint16_t getAddress();
 
  protected:
   explicit ModbusRequest(uint8_t length);
