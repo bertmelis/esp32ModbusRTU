@@ -43,9 +43,6 @@ esp32ModbusRTU::~esp32ModbusRTU() {
 }
 
 void esp32ModbusRTU::begin() {
-  if (_rtsPin < 0) {
-    abort();
-  }
   pinMode(_rtsPin, OUTPUT);
   digitalWrite(_rtsPin, LOW);
   xTaskCreate((TaskFunction_t)&_handleConnection, "esp32ModbusRTU", 4096, this, 5, &_task);
