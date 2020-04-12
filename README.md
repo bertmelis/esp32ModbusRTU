@@ -4,15 +4,15 @@
 
 This is a non blocking Modbus client (master) for ESP32.
 
-- Modbus Client aka Master for ESP32
-- built for the [Arduino framework for ESP32](https://github.com/espressif/arduino-esp32)
-- non blocking API. Blocking code is in a seperate task
-- only RS485 half duplex using a GPIO as RTS (DE/RS) is implemented
-- function codes implemented:
-  - read discrete inputs (02)
-  - read holding registers (03)
-  - read input registers (04)
-- similar API as my [esp32ModbusTCP](https://github.com/bertmelis/esp32ModbusTCP) implementation
+-  Modbus Client aka Master for ESP32
+-  built for the [Arduino framework for ESP32](https://github.com/espressif/arduino-esp32)
+-  non blocking API. Blocking code is in a seperate task
+-  only RS485 half duplex (optionally using a GPIO as RTS (DE/RS)) is implemented
+-  function codes implemented:
+  -  read discrete inputs (02)
+  -  read holding registers (03)
+  -  read input registers (04)
+-  similar API as my [esp32ModbusTCP](https://github.com/bertmelis/esp32ModbusTCP) implementation
 
 ## Developement status
 
@@ -20,9 +20,9 @@ I have this library in use myself with quite some uptime (only using FC3 -read h
 
 Things to do, ranked:
 
-- add debug info
-- unit testing for ModbusMessage
-- implement missing function codes (no priority, pull requests happily accepted)
+-  add debug info
+-  unit testing for ModbusMessage
+-  implement missing function codes (no priority, pull requests happily accepted)
 
 ## Installation
 
@@ -129,6 +129,6 @@ The waiting time before a timeout error is returned can also be changed by a `#d
 
 Please file a Github issue ~~if~~ when you find a bug. You can also use the issue tracker for feature requests.
 
-# Extra
+## Extra
 
 For modbus-TCP, check out [esp32ModbusTCP](https://github.com/bertmelis/esp32ModbusTCP)
