@@ -42,10 +42,10 @@ esp32ModbusRTU::~esp32ModbusRTU() {
   // TODO(bertmelis): kill task and cleanup
 }
 
-void esp32ModbusRTU::begin() {
+void esp32ModbusRTU::begin(int coreID /* = -1 */) {
   pinMode(_rtsPin, OUTPUT);
   digitalWrite(_rtsPin, LOW);
-  xTaskCreate((TaskFunction_t)&_handleConnection, "esp32ModbusRTU", 4096, this, 5, &_task);
+  xTaskCreatePinnedToCore((TaskFunction_t)&_handleConnection, "esp32ModbusRTU", 4096, this, 5, &_task, coreID >= 0 ? coreID : NULL);
   // silent interval is at least 3.5x character time
   _interval = 40000 / _serial->baudRate();  // 4 * 1000 * 10 / baud
   if (_interval == 0) _interval = 1;  // minimum of 1msec interval

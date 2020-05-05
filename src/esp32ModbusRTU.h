@@ -51,7 +51,7 @@ class esp32ModbusRTU {
  public:
   explicit esp32ModbusRTU(HardwareSerial* serial, int8_t rtsPin = -1);
   ~esp32ModbusRTU();
-  void begin();
+  void begin(int coreID = -1);
   bool readDiscreteInputs(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils);
   bool readHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters);
   bool readInputRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters);
