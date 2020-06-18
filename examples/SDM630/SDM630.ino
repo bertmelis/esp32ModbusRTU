@@ -27,8 +27,8 @@ void setup() {
     Serial.printf("\nval: %.2f", *reinterpret_cast<float*>(data));
     Serial.print("\n\n");
   });
-  modbus.onError([](esp32Modbus::Error error) {
-    Serial.printf("error: 0x%02x\n\n", static_cast<uint8_t>(error));
+  modbus.onError([](esp32Modbus::Error error, uint8_t slaveAddress) {
+    Serial.printf("slave %d error: 0x%02x\n\n", slaveAddress, static_cast<uint8_t>(error));
   });
   modbus.begin();
 

@@ -233,7 +233,7 @@ ModbusResponse::ModbusResponse(uint8_t length, ModbusRequest* request) :
   _error(esp32Modbus::SUCCES) {}
 
 bool ModbusResponse::isComplete() {
-  if (_buffer[1] > 0x80 && _index == 5) {  // 5: slaveAddress(1), errorCode(1), CRC(2) + indexed
+  if (_buffer[1] > 0x80 && _index == 5) {  // (zero-based) 5: slaveAddress(1), fc(1), errorCode(1), CRC(2) + indexed
     return true;
   }
   if (_index == _request->responseLength()) return true;
