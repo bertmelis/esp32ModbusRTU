@@ -65,6 +65,11 @@ bool esp32ModbusRTU::readInputRegisters(uint8_t slaveAddress, uint16_t address, 
   return _addToQueue(request);
 }
 
+bool esp32ModbusRTU::writeSingleHoldingRegister(uint8_t slaveAddress, uint16_t address, uint16_t data) {
+  ModbusRequest* request = new ModbusRequest06(slaveAddress, address, data);
+  return _addToQueue(request);
+}
+
 bool esp32ModbusRTU::writeMultHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data) {
   ModbusRequest* request = new ModbusRequest16(slaveAddress, address, numberRegisters, data);
   return _addToQueue(request);

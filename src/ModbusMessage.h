@@ -82,6 +82,13 @@ class ModbusRequest04 : public ModbusRequest {
   size_t responseLength();
 };
 
+// write single holding registers
+class ModbusRequest06 : public ModbusRequest {
+ public:
+  explicit ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_t data);
+  size_t responseLength();
+};
+
 // write multiple holding registers
 class ModbusRequest16 : public ModbusRequest {
  public:

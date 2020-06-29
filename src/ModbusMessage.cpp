@@ -202,6 +202,27 @@ size_t ModbusRequest04::responseLength() {
   return 5 + _byteCount;
 }
 
+ModbusRequest06::ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_t data) :
+  ModbusRequest(8) {
+  _slaveAddress = slaveAddress;
+  _functionCode = esp32Modbus::WRITE_HOLD_REGISTER;
+  _address = address;
+  _byteCount = 2;  // 1 register is 2 bytes wide
+  add(_slaveAddress);
+  add(_functionCode);
+  add(high(_address));
+  add(low(_address));
+  add(high(data));
+  add(low(data));
+  uint16_t CRC = CRC16(_buffer, 6);
+  add(low(CRC));
+  add(high(CRC));
+}
+
+size_t ModbusRequest06::responseLength() {
+  return 8;
+}
+
 ModbusRequest16::ModbusRequest16(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data) :
   ModbusRequest(9 + (numberRegisters * 2)) {
   _slaveAddress = slaveAddress;
