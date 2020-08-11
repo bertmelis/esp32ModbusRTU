@@ -28,6 +28,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using namespace esp32ModbusRTUInternals;  // NOLINT
 
+uint32_t esp32ModbusRTU::TimeOutValue = TIMEOUT_MS;
+
 esp32ModbusRTU::esp32ModbusRTU(HardwareSerial* serial, int8_t rtsPin) :
   _serial(serial),
   _lastMillis(0),
@@ -125,6 +127,11 @@ void esp32ModbusRTU::_send(uint8_t* data, uint8_t length) {
   _lastMillis = millis();
 }
 
+// Adjust timeout on MODBUS - some slaves require longer/allow for shorter times
+void esp32ModbusRTU::setTimeOutValue(uint32_t tov) {
+  if (tov) TimeOutValue = tov;
+}
+
 ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
   ModbusResponse* response = new ModbusResponse(request->responseLength(), request);
   while (true) {
@@ -135,7 +142,7 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
       _lastMillis = millis();
       break;
     }
-    if (millis() - _lastMillis > TIMEOUT_MS) {
+    if (millis() - _lastMillis > TimeOutValue) {
       break;
     }
     delay(1);  // take care of watchdog
