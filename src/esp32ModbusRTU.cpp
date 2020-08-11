@@ -43,8 +43,11 @@ esp32ModbusRTU::~esp32ModbusRTU() {
 }
 
 void esp32ModbusRTU::begin(int coreID /* = -1 */) {
-  pinMode(_rtsPin, OUTPUT);
-  digitalWrite(_rtsPin, LOW);
+  // If rtsPin is >=0, the RS485 adapter needs send/receive toggle
+  if (_rtsPin >= 0) {
+    pinMode(_rtsPin, OUTPUT);
+    digitalWrite(_rtsPin, LOW);
+  }
   xTaskCreatePinnedToCore((TaskFunction_t)&_handleConnection, "esp32ModbusRTU", 4096, this, 5, &_task, coreID >= 0 ? coreID : NULL);
   // silent interval is at least 3.5x character time
   _interval = 40000 / _serial->baudRate();  // 4 * 1000 * 10 / baud
@@ -113,10 +116,12 @@ void esp32ModbusRTU::_handleConnection(esp32ModbusRTU* instance) {
 
 void esp32ModbusRTU::_send(uint8_t* data, uint8_t length) {
   while (millis() - _lastMillis < _interval) delay(1);  // respect _interval
-  digitalWrite(_rtsPin, HIGH);
+  // Toggle rtsPin, if necessary
+  if (_rtsPin >= 0) digitalWrite(_rtsPin, HIGH);
   _serial->write(data, length);
   _serial->flush();
-  digitalWrite(_rtsPin, LOW);
+  // Toggle rtsPin, if necessary
+  if (_rtsPin >= 0) digitalWrite(_rtsPin, LOW);
   _lastMillis = millis();
 }
 
