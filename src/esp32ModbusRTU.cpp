@@ -97,8 +97,7 @@ bool esp32ModbusRTU::_addToQueue(ModbusRequest* request) {
 void esp32ModbusRTU::_handleConnection(esp32ModbusRTU* instance) {
   while (1) {
     ModbusRequest* request;
-    if (pdTRUE == xQueueReceive(instance->_queue, &request, portMAX_DELAY))  // block and wait for queued item
-    {
+    if (pdTRUE == xQueueReceive(instance->_queue, &request, portMAX_DELAY)) { // block and wait for queued item
       instance->_send(request->getMessage(), request->getSize());
       ModbusResponse* response = instance->_receive(request);
       if (response->isSucces()) {
