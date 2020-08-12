@@ -68,7 +68,7 @@ class esp32ModbusRTU {
   esp32ModbusRTUInternals::ModbusResponse* _receive(esp32ModbusRTUInternals::ModbusRequest* request);
 
  private:
-  static uint32_t TimeOutValue;
+  uint32_t TimeOutValue;
   HardwareSerial* _serial;
   uint32_t _lastMillis;
   uint32_t _interval;
