@@ -28,15 +28,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using namespace esp32ModbusRTUInternals;  // NOLINT
 
-uint32_t esp32ModbusRTU::TimeOutValue = TIMEOUT_MS;
-
 esp32ModbusRTU::esp32ModbusRTU(HardwareSerial* serial, int8_t rtsPin) :
   _serial(serial),
   _lastMillis(0),
   _interval(0),
   _rtsPin(rtsPin),
   _task(nullptr),
-  _queue(nullptr) {
+  _queue(nullptr),
+  TimeOutValue(TIMEOUT_MS)  {
     _queue = xQueueCreate(QUEUE_SIZE, sizeof(ModbusRequest*));
 }
 
