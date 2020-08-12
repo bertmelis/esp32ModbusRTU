@@ -59,6 +59,7 @@ class esp32ModbusRTU {
   bool writeMultHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data);
   void onData(esp32Modbus::MBRTUOnData handler);
   void onError(esp32Modbus::MBRTUOnError handler);
+  void setTimeOutValue(uint32_t tov);
 
  private:
   bool _addToQueue(esp32ModbusRTUInternals::ModbusRequest* request);
@@ -67,6 +68,7 @@ class esp32ModbusRTU {
   esp32ModbusRTUInternals::ModbusResponse* _receive(esp32ModbusRTUInternals::ModbusRequest* request);
 
  private:
+  uint32_t TimeOutValue;
   HardwareSerial* _serial;
   uint32_t _lastMillis;
   uint32_t _interval;
