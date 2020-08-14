@@ -31,11 +31,15 @@ using namespace esp32ModbusRTUInternals;  // NOLINT
 esp32ModbusRTU::esp32ModbusRTU(HardwareSerial* serial, int8_t rtsPin) :
   TimeOutValue(TIMEOUT_MS),
   _serial(serial),
-  _lastMillis(0),
+  _lastMicros(0),
   _interval(0),
   _rtsPin(rtsPin),
   _task(nullptr),
-  _queue(nullptr)  {
+  _queue(nullptr),
+  _onData(nullptr),
+  _onError(nullptr),
+  _onDataToken(nullptr),
+  _onErrorToken(nullptr)  {
     _queue = xQueueCreate(QUEUE_SIZE, sizeof(ModbusRequest*));
 }
 
@@ -51,31 +55,35 @@ void esp32ModbusRTU::begin(int coreID /* = -1 */) {
   }
   xTaskCreatePinnedToCore((TaskFunction_t)&_handleConnection, "esp32ModbusRTU", 4096, this, 5, &_task, coreID >= 0 ? coreID : NULL);
   // silent interval is at least 3.5x character time
-  _interval = 40000 / _serial->baudRate();  // 4 * 1000 * 10 / baud
-  if (_interval == 0) _interval = 1;  // minimum of 1msec interval
+  _interval = 35000000UL / _serial->baudRate();  // 3.5 * 10 bits * 1000 µs * 1000 ms / baud
+
+  // The following is okay for sending at any baud rate, but problematic at receiving with baud rates above 35000,
+  // since the calculated interval will be below 1000µs!
+  // f.i. 115200bd ==> interval=304µs
+  if (_interval < 1000) _interval = 1000;  // minimum of 1msec interval
 }
 
-bool esp32ModbusRTU::readDiscreteInputs(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils) {
-  ModbusRequest* request = new ModbusRequest02(slaveAddress, address, numberCoils);
+bool esp32ModbusRTU::readDiscreteInputs(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils, uint32_t token) {
+  ModbusRequest* request = new ModbusRequest02(slaveAddress, address, numberCoils, token);
   return _addToQueue(request);
 }
-bool esp32ModbusRTU::readHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters) {
-  ModbusRequest* request = new ModbusRequest03(slaveAddress, address, numberRegisters);
-  return _addToQueue(request);
-}
-
-bool esp32ModbusRTU::readInputRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters) {
-  ModbusRequest* request = new ModbusRequest04(slaveAddress, address, numberRegisters);
-  return _addToQueue(request);
-}
-
-bool esp32ModbusRTU::writeSingleHoldingRegister(uint8_t slaveAddress, uint16_t address, uint16_t data) {
-  ModbusRequest* request = new ModbusRequest06(slaveAddress, address, data);
+bool esp32ModbusRTU::readHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint32_t token) {
+  ModbusRequest* request = new ModbusRequest03(slaveAddress, address, numberRegisters, token);
   return _addToQueue(request);
 }
 
-bool esp32ModbusRTU::writeMultHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data) {
-  ModbusRequest* request = new ModbusRequest16(slaveAddress, address, numberRegisters, data);
+bool esp32ModbusRTU::readInputRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint32_t token) {
+  ModbusRequest* request = new ModbusRequest04(slaveAddress, address, numberRegisters, token);
+  return _addToQueue(request);
+}
+
+bool esp32ModbusRTU::writeSingleHoldingRegister(uint8_t slaveAddress, uint16_t address, uint16_t data, uint32_t token) {
+  ModbusRequest* request = new ModbusRequest06(slaveAddress, address, data, token);
+  return _addToQueue(request);
+}
+
+bool esp32ModbusRTU::writeMultHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data, uint32_t token) {
+  ModbusRequest* request = new ModbusRequest16(slaveAddress, address, numberRegisters, data, token);
   return _addToQueue(request);
 }
 
@@ -85,6 +93,14 @@ void esp32ModbusRTU::onData(esp32Modbus::MBRTUOnData handler) {
 
 void esp32ModbusRTU::onError(esp32Modbus::MBRTUOnError handler) {
   _onError = handler;
+}
+
+void esp32ModbusRTU::onDataToken(esp32Modbus::MBRTUOnDataToken handler) {
+  _onDataToken = handler;
+}
+
+void esp32ModbusRTU::onErrorToken(esp32Modbus::MBRTUOnErrorToken handler) {
+  _onErrorToken = handler;
 }
 
 bool esp32ModbusRTU::_addToQueue(ModbusRequest* request) {
@@ -106,8 +122,10 @@ void esp32ModbusRTU::_handleConnection(esp32ModbusRTU* instance) {
       ModbusResponse* response = instance->_receive(request);
       if (response->isSucces()) {
         if (instance->_onData) instance->_onData(response->getSlaveAddress(), response->getFunctionCode(), request->getAddress(), response->getData(), response->getByteCount());
+        else if (instance->_onDataToken) instance->_onData(response->getSlaveAddress(), response->getFunctionCode(), request->getAddress(), response->getData(), response->getByteCount(), response->getToken())
       } else {
         if (instance->_onError) instance->_onError(response->getError());
+        else if (instance->_onErrorToken) instance->_onError(response->getError(), response->getToken());
       }
       delete request;  // object created in public methods
       delete response;  // object created in _receive()
@@ -116,14 +134,14 @@ void esp32ModbusRTU::_handleConnection(esp32ModbusRTU* instance) {
 }
 
 void esp32ModbusRTU::_send(uint8_t* data, uint8_t length) {
-  while (millis() - _lastMillis < _interval) delay(1);  // respect _interval
+  while (micros() - _lastMicros < _interval) delayMicroseconds(1);  // respect _interval
   // Toggle rtsPin, if necessary
   if (_rtsPin >= 0) digitalWrite(_rtsPin, HIGH);
   _serial->write(data, length);
   _serial->flush();
   // Toggle rtsPin, if necessary
   if (_rtsPin >= 0) digitalWrite(_rtsPin, LOW);
-  _lastMillis = millis();
+  _lastMicros = micros();
 }
 
 // Adjust timeout on MODBUS - some slaves require longer/allow for shorter times
@@ -133,15 +151,16 @@ void esp32ModbusRTU::setTimeOutValue(uint32_t tov) {
 
 ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
   ModbusResponse* response = new ModbusResponse(request->responseLength(), request);
+  uint32_t lastMillis = millis();
   while (true) {
     while (_serial->available()) {
       response->add(_serial->read());
     }
     if (response->isComplete()) {
-      _lastMillis = millis();
+      lastMillis = millis();
       break;
     }
-    if (millis() - _lastMillis > TimeOutValue) {
+    if (millis() - lastMillis > TimeOutValue) {
       break;
     }
     delay(1);  // take care of watchdog
