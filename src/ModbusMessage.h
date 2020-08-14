@@ -37,6 +37,7 @@ class ModbusMessage {
   virtual ~ModbusMessage();
   uint8_t* getMessage();
   uint8_t getSize();
+  uint32_t getToken();
   void add(uint8_t value);
 
  protected:
@@ -44,6 +45,7 @@ class ModbusMessage {
   uint8_t* _buffer;
   uint8_t _length;
   uint8_t _index;
+  uint32_t _token;
 };
 
 class ModbusResponse;  // forward declare for use in ModbusRequest
@@ -64,35 +66,35 @@ class ModbusRequest : public ModbusMessage {
 // read discrete coils
 class ModbusRequest02 : public ModbusRequest {
  public:
-  explicit ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils);
+  explicit ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils, uint32_t token = 0);
   size_t responseLength();
 };
 
 // read holding registers
 class ModbusRequest03 : public ModbusRequest {
  public:
-  explicit ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters);
+  explicit ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint32_t token = 0);
   size_t responseLength();
 };
 
 // read input registers
 class ModbusRequest04 : public ModbusRequest {
  public:
-  explicit ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters);
+  explicit ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint32_t token = 0);
   size_t responseLength();
 };
 
 // write single holding registers
 class ModbusRequest06 : public ModbusRequest {
  public:
-  explicit ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_t data);
+  explicit ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_t data, uint32_t token = 0);
   size_t responseLength();
 };
 
 // write multiple holding registers
 class ModbusRequest16 : public ModbusRequest {
  public:
-  explicit ModbusRequest16(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data);
+  explicit ModbusRequest16(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data, uint32_t token = 0);
   size_t responseLength();
 };
 
