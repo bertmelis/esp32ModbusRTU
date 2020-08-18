@@ -167,21 +167,114 @@ void esp32ModbusRTU::setTimeOutValue(uint32_t tov) {
 }
 
 ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
-  ModbusResponse* response = new ModbusResponse(request->responseLength(), request);
-  uint32_t lastMillis = millis();
-  while (true) {
-    while (_serial->available()) {
-      response->add(_serial->read());
-    }
-    if (response->isComplete()) {
-      lastMillis = millis();
+  // Allocate initial buffer size
+  const uint16_t BUFBLOCKSIZE(128);
+  uint8_t *buffer = new uint8_t[BUFBLOCKSIZE];
+  uint8_t bufferBlocks = 1;
+
+  // Index into buffer
+  register uint16_t bufferPtr = 0;
+
+  // State machine states
+  typedef enum STATES : uint8_t { WAIT_INTERVAL=0, WAIT_DATA, IN_PACKET, DATA_READ, ERROR_EXIT, FINISHED };
+  register STATES state = WAIT_INTERVAL;
+
+  // Timeout tracker
+  uint32_t TimeOut = millis();
+
+  // Error code
+  esp32Modbus::Error errorCode = esp32Modbus::SUCCES;
+
+  // Return data object
+  ModbusResponse* response = nullptr;
+
+  while(state!=FINISHED)
+  {
+    switch(state)
+    {
+    // WAIT_INTERVAL: spend the remainder of the bus quiet time waiting
+    case WAIT_INTERVAL:
+      // Time passed?
+      if(micros()-_lastMicros>=_interval) {
+        // Yes, proceed to reading data
+        state = WAIT_DATA;
+      }
+      else {
+        // No, wait a little longer
+        delayMicroseconds(1);
+      }
+      break;
+    // WAIT_DATA: await first data byte, but watch timeout
+    case WAIT_DATA:
+      if(_serial.available()) {
+        state = IN_PACKET;
+        _lastMicros = micros();
+      }
+      else if(millis() - TimeOut >= TimeOutValue) {
+        errorCode = esp32Modbus::TIMEOUT;
+        state = ERROR_EXIT;
+      }
+      break;
+    // IN_PACKET: read data until a gap of at least _interval time passed without another byte arriving
+    case IN_PACKET:
+      // Data waiting and space left in buffer?
+      while (bufferPtr<128 && _serial->available()) {
+        // Yes. Catch the byte
+        buffer[bufferPtr++] = _serial.read();
+        // Rewind timer
+        _lastMicros = micros();
+      }
+      // Buffer full?
+      if(bufferPtr>=128) {
+        // Yes. Extend it by another block
+        bufferBlocks++;
+        uint8_t *temp = new uint8_t[bufferBlocks * BUFBLOCKSIZE];
+        memcpy(temp, buffer, (bufferBlocks-1) * BUFBLOCKSIZE);
+        delete buffer;
+        buffer = temp;
+      }
+      // Gap of at least _interval micro seconds passed without data?
+      if(micros() - _lastMicros <= _interval) {
+        state = DATA_READ;
+      }
+      break;
+    // DATA_READ: successfully gathered some data. Prepare return object.
+    case DATA_READ:
+      // Check response for validity
+      // 1) Did the right slave answer?
+      if(buffer[0] != request->getSlaveAddress()) {
+        errorCode = esp32Modbus::INVALID_SLAVE;
+        state = ERROR_EXIT;
+      }
+      // More to be added here
+      else {
+        // Allocate response object
+        response = new ModbusResponse(bufferPtr, request);
+        // Move gathered data into it
+        for(uint16_t tPtr = 0; tPtr < bufferPtr; tPtr++) {
+          response->add(buffer[tPtr]);
+        }
+        state = FINISHED;
+      }
+      break;
+    // ERROR_EXIT: We had a timeout. Prepare error return object
+    case ERROR_EXIT:
+      response = new ModbusResponse(5, request);
+      response->add(request->getSlaveAddress());
+      response->add(request->getFunctionCode() | 0x80);
+      response->add(errorCode);
+      uint16_t CRC = CRC16(_buffer, 3);
+      response->add(low(CRC));
+      response->add(high(CRC));
+      state = FINISHED;
       break;
     }
-    if (millis() - lastMillis > TimeOutValue) {
-      break;
-    }
-    delay(1);  // take care of watchdog
   }
+
+  // Deallocate buffer
+  delete buffer;
+  _lastMicros = micros();
+
   return response;
 }
 

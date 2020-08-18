@@ -139,8 +139,16 @@ ModbusRequest::ModbusRequest(uint8_t length) :
   _address(0),
   _byteCount(0) {}
 
-  uint16_t ModbusRequest::getAddress() {
+uint16_t ModbusRequest::getAddress() {
   return _address;
+}
+
+uint8_t ModbusRequest::getSlaveAddress() {
+  return _slaveAddress;
+}
+
+uint8_t ModbusRequest::getFunctionCode() {
+  return _functionCode;
 }
 
 ModbusRequest02::ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils, uint32_t token) :
@@ -263,30 +271,18 @@ ModbusResponse::ModbusResponse(uint8_t length, ModbusRequest* request) :
   _request(request),
   _error(esp32Modbus::SUCCES) { _token = request->getToken(); }
 
-bool ModbusResponse::isComplete() {
-  if (_buffer[1] > 0x80 && _index == 5) {  // 5: slaveAddress(1), errorCode(1), CRC(2) + indexed
-    return true;
-  }
-  if (_index == _request->responseLength()) return true;
-  return false;
-}
-
 bool ModbusResponse::isSucces() {
-  if (!isComplete()) {
-    _error = esp32Modbus::TIMEOUT;
-  } else if (_buffer[1] > 0x80) {
+  _error = esp32Modbus::SUCCES;
+  if (_buffer[1] > 0x80) {
     _error = static_cast<esp32Modbus::Error>(_buffer[2]);
   } else if (!checkCRC()) {
     _error = esp32Modbus::CRC_ERROR;
   // TODO(bertmelis): add other checks
-  } else {
-    _error = esp32Modbus::SUCCES;
   }
   if (_error == esp32Modbus::SUCCES) {
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 
 bool ModbusResponse::checkCRC() {

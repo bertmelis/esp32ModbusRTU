@@ -54,6 +54,8 @@ class ModbusRequest : public ModbusMessage {
  public:
   virtual size_t responseLength() = 0;
   uint16_t getAddress();
+  uint8_t getFunctionCode();
+  uint8_t getSlaveAddress();
 
  protected:
   explicit ModbusRequest(uint8_t length);
@@ -101,7 +103,6 @@ class ModbusRequest16 : public ModbusRequest {
 class ModbusResponse : public ModbusMessage {
  public:
   explicit ModbusResponse(uint8_t length, ModbusRequest* request);
-  bool isComplete();
   bool isSucces();
   bool checkCRC();
   esp32Modbus::Error getError() const;
