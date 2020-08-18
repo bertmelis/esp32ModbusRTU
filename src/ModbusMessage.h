@@ -108,7 +108,7 @@ class ModbusResponse : public ModbusMessage {
   esp32Modbus::Error getError() const;
 
   uint8_t getSlaveAddress();
-  esp32Modbus::FunctionCode getFunctionCode();
+  uint8_t getFunctionCode();
   uint8_t* getData();
   uint8_t getByteCount();
 

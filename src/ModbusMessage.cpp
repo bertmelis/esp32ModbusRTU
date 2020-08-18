@@ -302,14 +302,26 @@ uint8_t ModbusResponse::getSlaveAddress() {
   return _buffer[0];
 }
 
-esp32Modbus::FunctionCode ModbusResponse::getFunctionCode() {
-  return static_cast<esp32Modbus::FunctionCode>(_buffer[1]);
+uint8_t ModbusResponse::getFunctionCode() {
+  return _buffer[1];
 }
 
 uint8_t* ModbusResponse::getData() {
-  return &_buffer[3];
+  uint8_t fc = _request->getFunctionCode();
+  if(fc == 0x01 || fc == 0x02 || fc == 0x03 || fc == 0x04) {
+    return &_buffer[3];
+  }
+  else {
+    return &_buffer[2];
+  }
 }
 
 uint8_t ModbusResponse::getByteCount() {
-  return _buffer[2];
+  uint8_t fc = _request->getFunctionCode();
+  if(fc == 0x01 || fc == 0x02 || fc == 0x03 || fc == 0x04) {
+    return _buffer[2];
+  }
+  else {
+    return _index - 2;
+  }
 }
