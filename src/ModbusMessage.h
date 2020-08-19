@@ -100,6 +100,13 @@ class ModbusRequest16 : public ModbusRequest {
   size_t responseLength();
 };
 
+// "raw" request based on a request packet obtained as is.
+class ModbusRequestRaw : public ModbusRequest {
+ public:
+  explicit ModbusRequestRaw(uint8_t slaveAddress, uint8_t functionCode, uint16_t dataLength, uint8_t* data, uint32_t token=0);
+  size_t responseLength();
+};
+
 class ModbusResponse : public ModbusMessage {
  public:
   explicit ModbusResponse(uint8_t length, ModbusRequest* request);

@@ -87,6 +87,11 @@ bool esp32ModbusRTU::writeMultHoldingRegisters(uint8_t slaveAddress, uint16_t ad
   return _addToQueue(request);
 }
 
+bool esp32ModbusRTU::rawRequest(uint8_t slaveAddress, uint8_t functionCode, uint16_t dataLength, uint8_t* data, uint32_t token) {
+  ModbusRequest* request = new ModbusRequestRaw(slaveAddress, functionCode, dataLength, data, token);
+  return _addToQueue(request);
+}
+
 void esp32ModbusRTU::onData(esp32Modbus::MBRTUOnData handler) {
   _onData = handler;
 }

@@ -57,6 +57,7 @@ class esp32ModbusRTU {
   bool readInputRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint32_t token = 0);
   bool writeSingleHoldingRegister(uint8_t slaveAddress, uint16_t address, uint16_t data, uint32_t token = 0);
   bool writeMultHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data, uint32_t token = 0);
+  bool rawRequest(uint8_t slaveAddress, uint8_t functionCode, uint16_t dataLength, uint8_t *data, uint32_t token = 0);
   void onData(esp32Modbus::MBRTUOnData handler);
   void onError(esp32Modbus::MBRTUOnError handler);
   void onDataToken(esp32Modbus::MBRTUOnDataToken handler);

@@ -266,6 +266,36 @@ size_t ModbusRequest16::responseLength() {
   return 8;
 }
 
+ModbusRequestRaw::ModbusRequestRaw(uint8_t slaveAddress, uint8_t functionCode, uint16_t dataLength, uint8_t* data, uint32_t token) :
+  ModbusRequest(dataLength + 4) {
+  _slaveAddress = slaveAddress;
+  _functionCode = functionCode;
+  _address = 0;
+  _byteCount = dataLength + 2;
+  _token = token;
+  add(_slaveAddress);
+  add(_functionCode);
+  for (int i = 0; i < dataLength; i++) {
+      add(data[i]);
+    }
+  uint16_t CRC = CRC16(_buffer, _byteCount);
+  add(low(CRC));
+  add(high(CRC));
+  /*
+  Serial.print("rawRequest: ");
+  for(uint8_t i=0; i<_byteCount; ++i)
+  {
+    Serial.print(_buffer[i], HEX);
+    Serial.print(" ");
+  }
+  Serial.println("");
+  */
+}
+
+size_t ModbusRequestRaw::responseLength() {
+  return 6;
+}
+
 ModbusResponse::ModbusResponse(uint8_t length, ModbusRequest* request) :
   ModbusMessage(length),
   _request(request),
