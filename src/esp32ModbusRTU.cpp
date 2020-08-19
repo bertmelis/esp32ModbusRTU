@@ -248,8 +248,8 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
       // Allocate response object
       response = new ModbusResponse(bufferPtr, request);
       // Move gathered data into it
-      memcpy(_buffer, buffer, bufferPtr);
-      _index = bufferPtr;
+      memcpy(response->_buffer, buffer, bufferPtr);
+      response->_index = bufferPtr;
       state = FINISHED;
       break;
     // ERROR_EXIT: We had a timeout. Prepare error return object
