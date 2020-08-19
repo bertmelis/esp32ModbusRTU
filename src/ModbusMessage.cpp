@@ -272,11 +272,12 @@ ModbusResponse::ModbusResponse(uint8_t length, ModbusRequest* request) :
   _error(esp32Modbus::SUCCES) { _token = request->getToken(); }
 
 bool ModbusResponse::isSucces() {
-  _error = esp32Modbus::SUCCES;
   if (_buffer[1] > 0x80) {
     _error = static_cast<esp32Modbus::Error>(_buffer[2]);
   } else if (!checkCRC()) {
     _error = esp32Modbus::CRC_ERROR;
+  } else if (_buffer[0] != _request->getSlaveAddress()) {
+    _error = esp32Modbus::INVALID_SLAVE;
   // TODO(bertmelis): add other checks
   }
   if (_error == esp32Modbus::SUCCES) {

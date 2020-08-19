@@ -188,14 +188,14 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
   // Return data object
   ModbusResponse* response = nullptr;
 
-  while(state!=FINISHED)
+  while(state != FINISHED)
   {
     switch(state)
     {
     // WAIT_INTERVAL: spend the remainder of the bus quiet time waiting
     case WAIT_INTERVAL:
       // Time passed?
-      if(micros()-_lastMicros>=_interval) {
+      if(micros() - _lastMicros >= _interval) {
         // Yes, proceed to reading data
         state = WAIT_DATA;
       }
@@ -218,18 +218,18 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
     // IN_PACKET: read data until a gap of at least _interval time passed without another byte arriving
     case IN_PACKET:
       // Data waiting and space left in buffer?
-      while (bufferPtr<128 && _serial->available()) {
+      while (bufferPtr < bufferBlocks * BUFBLOCKSIZE && _serial->available()) {
         // Yes. Catch the byte
         buffer[bufferPtr++] = _serial.read();
         // Rewind timer
         _lastMicros = micros();
       }
       // Buffer full?
-      if(bufferPtr>=128) {
+      if(bufferPtr >= bufferBlocks * BUFBLOCKSIZE) {
         // Yes. Extend it by another block
         bufferBlocks++;
         uint8_t *temp = new uint8_t[bufferBlocks * BUFBLOCKSIZE];
-        memcpy(temp, buffer, (bufferBlocks-1) * BUFBLOCKSIZE);
+        memcpy(temp, buffer, (bufferBlocks - 1) * BUFBLOCKSIZE);
         delete buffer;
         buffer = temp;
       }
@@ -240,22 +240,12 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
       break;
     // DATA_READ: successfully gathered some data. Prepare return object.
     case DATA_READ:
-      // Check response for validity
-      // 1) Did the right slave answer?
-      if(buffer[0] != request->getSlaveAddress()) {
-        errorCode = esp32Modbus::INVALID_SLAVE;
-        state = ERROR_EXIT;
-      }
-      // More to be added here
-      else {
-        // Allocate response object
-        response = new ModbusResponse(bufferPtr, request);
-        // Move gathered data into it
-        for(uint16_t tPtr = 0; tPtr < bufferPtr; tPtr++) {
-          response->add(buffer[tPtr]);
-        }
-        state = FINISHED;
-      }
+      // Allocate response object
+      response = new ModbusResponse(bufferPtr, request);
+      // Move gathered data into it
+      memcpy(_buffer, buffer, bufferPtr);
+      _index = bufferPtr;
+      state = FINISHED;
       break;
     // ERROR_EXIT: We had a timeout. Prepare error return object
     case ERROR_EXIT:
