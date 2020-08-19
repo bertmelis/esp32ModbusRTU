@@ -181,7 +181,7 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
   register uint16_t bufferPtr = 0;
 
   // State machine states
-  typedef enum STATES : uint8_t { WAIT_INTERVAL=0, WAIT_DATA, IN_PACKET, DATA_READ, ERROR_EXIT, FINISHED };
+  enum STATES : uint8_t { WAIT_INTERVAL=0, WAIT_DATA, IN_PACKET, DATA_READ, ERROR_EXIT, FINISHED };
   register STATES state = WAIT_INTERVAL;
 
   // Timeout tracker
@@ -211,7 +211,7 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
       break;
     // WAIT_DATA: await first data byte, but watch timeout
     case WAIT_DATA:
-      if(_serial.available()) {
+      if(_serial->available()) {
         state = IN_PACKET;
         _lastMicros = micros();
       }
@@ -225,7 +225,7 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
       // Data waiting and space left in buffer?
       while (bufferPtr < bufferBlocks * BUFBLOCKSIZE && _serial->available()) {
         // Yes. Catch the byte
-        buffer[bufferPtr++] = _serial.read();
+        buffer[bufferPtr++] = _serial->read();
         // Rewind timer
         _lastMicros = micros();
       }
@@ -262,6 +262,9 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
       response->add(low(CRC));
       response->add(high(CRC));
       state = FINISHED;
+      break;
+    // FINISHED: we are done, keep the compiler happy by pseudo-treating it.
+    case FINISHED:
       break;
     }
   }
