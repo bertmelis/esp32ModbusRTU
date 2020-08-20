@@ -323,14 +323,14 @@ uint8_t ModbusResponse::getByteCount() {
   }
 }
 
-void ModbusResponse::setErrorResponse(uint8_t slaveAddress, uint8_t functionCode, uint8_t errorCode) {
+void ModbusResponse::setErrorResponse(uint8_t errorCode) {
   if(_length != 5) {
     delete _buffer;
     _buffer = new uint8_t[5];
   }
   _index = 0;
-  add(request->getSlaveAddress());
-  add(request->getFunctionCode() | 0x80);
+  add(_request->getSlaveAddress());
+  add(_request->getFunctionCode() | 0x80);
   add(errorCode);
   uint16_t CRC = CRC16(_buffer, 3);
   add(low(CRC));

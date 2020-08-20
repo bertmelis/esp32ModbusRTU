@@ -27,6 +27,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdint.h>  // for uint*_t
 #include <stddef.h>  // for size_t
+#include <cstring>  // for memcpy
 
 #include "esp32ModbusTypeDefs.h"
 
@@ -111,7 +112,7 @@ class ModbusResponse : public ModbusMessage {
   uint8_t getFunctionCode();
   uint8_t* getData();
   uint8_t getByteCount();
-  void setErrorResponse(uint8_t slaveAddress, uint8_t functionCode, uint8_t errorCode);
+  void setErrorResponse(uint8_t errorCode);
   void setData(uint16_t dataLength, uint8_t *data);
 
  private:

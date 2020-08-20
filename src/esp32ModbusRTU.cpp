@@ -254,7 +254,7 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
     // ERROR_EXIT: We had a timeout. Prepare error return object
     case ERROR_EXIT:
       response = new ModbusResponse(5, request);
-      response->setErrorResponse(request->getSlaveAddress(), request->getFunctionCode(), errorCode);
+      response->setErrorResponse(errorCode);
       state = FINISHED;
       break;
     // FINISHED: we are done, keep the compiler happy by pseudo-treating it.
