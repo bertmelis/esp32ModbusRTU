@@ -248,18 +248,13 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
       // Allocate response object
       response = new ModbusResponse(bufferPtr, request);
       // Move gathered data into it
-      for(uint16_t fPtr = 0; fPtr < bufferPtr; fPtr++) response->add(buffer[fPtr]);
+      response->setData(bufferPtr, buffer);
       state = FINISHED;
       break;
     // ERROR_EXIT: We had a timeout. Prepare error return object
     case ERROR_EXIT:
       response = new ModbusResponse(5, request);
-      response->add(request->getSlaveAddress());
-      response->add(request->getFunctionCode() | 0x80);
-      response->add(errorCode);
-      uint16_t CRC = CRC16(_buffer, 3);
-      response->add(low(CRC));
-      response->add(high(CRC));
+      response->setErrorResponse(request->getSlaveAddress(), request->getFunctionCode(), errorCode);
       state = FINISHED;
       break;
     // FINISHED: we are done, keep the compiler happy by pseudo-treating it.

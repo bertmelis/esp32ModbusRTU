@@ -52,7 +52,6 @@ class ModbusResponse;  // forward declare for use in ModbusRequest
 
 class ModbusRequest : public ModbusMessage {
  public:
-  virtual size_t responseLength() = 0;
   uint16_t getAddress();
   uint8_t getFunctionCode();
   uint8_t getSlaveAddress();
@@ -69,42 +68,36 @@ class ModbusRequest : public ModbusMessage {
 class ModbusRequest02 : public ModbusRequest {
  public:
   explicit ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils, uint32_t token = 0);
-  size_t responseLength();
 };
 
 // read holding registers
 class ModbusRequest03 : public ModbusRequest {
  public:
   explicit ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint32_t token = 0);
-  size_t responseLength();
 };
 
 // read input registers
 class ModbusRequest04 : public ModbusRequest {
  public:
   explicit ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint32_t token = 0);
-  size_t responseLength();
 };
 
 // write single holding registers
 class ModbusRequest06 : public ModbusRequest {
  public:
   explicit ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_t data, uint32_t token = 0);
-  size_t responseLength();
 };
 
 // write multiple holding registers
 class ModbusRequest16 : public ModbusRequest {
  public:
   explicit ModbusRequest16(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data, uint32_t token = 0);
-  size_t responseLength();
 };
 
 // "raw" request based on a request packet obtained as is.
 class ModbusRequestRaw : public ModbusRequest {
  public:
   explicit ModbusRequestRaw(uint8_t slaveAddress, uint8_t functionCode, uint16_t dataLength, uint8_t* data, uint32_t token=0);
-  size_t responseLength();
 };
 
 class ModbusResponse : public ModbusMessage {
@@ -118,6 +111,8 @@ class ModbusResponse : public ModbusMessage {
   uint8_t getFunctionCode();
   uint8_t* getData();
   uint8_t getByteCount();
+  void setErrorResponse(uint8_t slaveAddress, uint8_t functionCode, uint8_t errorCode);
+  void setData(uint16_t dataLength, uint8_t *data);
 
  private:
   ModbusRequest* _request;

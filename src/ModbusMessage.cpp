@@ -169,10 +169,6 @@ ModbusRequest02::ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_
   add(high(CRC));
 }
 
-size_t ModbusRequest02::responseLength() {
-  return 5 + _byteCount;
-}
-
 ModbusRequest03::ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint32_t token) :
   ModbusRequest(12) {
   _slaveAddress = slaveAddress;
@@ -189,10 +185,6 @@ ModbusRequest03::ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_
   uint16_t CRC = CRC16(_buffer, 6);
   add(low(CRC));
   add(high(CRC));
-}
-
-size_t ModbusRequest03::responseLength() {
-  return 5 + _byteCount;
 }
 
 ModbusRequest04::ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint32_t token) :
@@ -213,11 +205,6 @@ ModbusRequest04::ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_
   add(high(CRC));
 }
 
-size_t ModbusRequest04::responseLength() {
-  // slaveAddress (1) + functionCode (1) + byteCount (1) + length x 2 + CRC (2)
-  return 5 + _byteCount;
-}
-
 ModbusRequest06::ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_t data, uint32_t token) :
   ModbusRequest(8) {
   _slaveAddress = slaveAddress;
@@ -234,10 +221,6 @@ ModbusRequest06::ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_
   uint16_t CRC = CRC16(_buffer, 6);
   add(low(CRC));
   add(high(CRC));
-}
-
-size_t ModbusRequest06::responseLength() {
-  return 8;
 }
 
 ModbusRequest16::ModbusRequest16(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data, uint32_t token) :
@@ -262,10 +245,6 @@ ModbusRequest16::ModbusRequest16(uint8_t slaveAddress, uint16_t address, uint16_
   add(high(CRC));
 }
 
-size_t ModbusRequest16::responseLength() {
-  return 8;
-}
-
 ModbusRequestRaw::ModbusRequestRaw(uint8_t slaveAddress, uint8_t functionCode, uint16_t dataLength, uint8_t* data, uint32_t token) :
   ModbusRequest(dataLength + 4) {
   _slaveAddress = slaveAddress;
@@ -281,19 +260,6 @@ ModbusRequestRaw::ModbusRequestRaw(uint8_t slaveAddress, uint8_t functionCode, u
   uint16_t CRC = CRC16(_buffer, _byteCount);
   add(low(CRC));
   add(high(CRC));
-  /*
-  Serial.print("rawRequest: ");
-  for(uint8_t i=0; i<_byteCount; ++i)
-  {
-    Serial.print(_buffer[i], HEX);
-    Serial.print(" ");
-  }
-  Serial.println("");
-  */
-}
-
-size_t ModbusRequestRaw::responseLength() {
-  return 6;
 }
 
 ModbusResponse::ModbusResponse(uint8_t length, ModbusRequest* request) :
@@ -355,4 +321,27 @@ uint8_t ModbusResponse::getByteCount() {
   else {
     return _index - 2;
   }
+}
+
+void ModbusResponse::setErrorResponse(uint8_t slaveAddress, uint8_t functionCode, uint8_t errorCode) {
+  if(_length != 5) {
+    delete _buffer;
+    _buffer = new uint8_t[5];
+  }
+  _index = 0;
+  add(request->getSlaveAddress());
+  add(request->getFunctionCode() | 0x80);
+  add(errorCode);
+  uint16_t CRC = CRC16(_buffer, 3);
+  add(low(CRC));
+  add(high(CRC));
+}
+
+void ModbusResponse::setData(uint16_t dataLength, uint8_t *data) {
+  if(_length != dataLength) {
+    delete _buffer;
+    _buffer = new uint8_t[dataLength];
+  }
+  _index = dataLength;
+  memcpy(_buffer, data, dataLength);
 }
