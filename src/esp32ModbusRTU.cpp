@@ -240,7 +240,7 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
         buffer = temp;
       }
       // Gap of at least _interval micro seconds passed without data?
-      if(micros() - _lastMicros <= _interval) {
+      if(micros() - _lastMicros >= _interval) {
         state = DATA_READ;
       }
       break;

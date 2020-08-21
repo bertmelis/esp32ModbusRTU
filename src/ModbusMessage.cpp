@@ -327,6 +327,7 @@ void ModbusResponse::setErrorResponse(uint8_t errorCode) {
   if(_length != 5) {
     delete _buffer;
     _buffer = new uint8_t[5];
+    _length = 5;
   }
   _index = 0;
   add(_request->getSlaveAddress());
@@ -341,6 +342,7 @@ void ModbusResponse::setData(uint16_t dataLength, uint8_t *data) {
   if(_length != dataLength) {
     delete _buffer;
     _buffer = new uint8_t[dataLength];
+    _length = dataLength;
   }
   _index = dataLength;
   memcpy(_buffer, data, dataLength);
