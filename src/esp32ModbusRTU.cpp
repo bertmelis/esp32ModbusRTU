@@ -240,7 +240,11 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
         buffer = temp;
       }
       // Gap of at least _interval micro seconds passed without data?
-      if(micros() - _lastMicros >= _interval) {
+      // if(micros() - _lastMicros >= _interval) {
+      // The above line is the theory - in practice the FIFO copy process into
+      // the Serial buffer takes much longer than that. In lieu of a better
+      // solution we will use 16ms(!) instead of _interval :(
+      if(micros() - _lastMicros >= 16000) {
         state = DATA_READ;
       }
       break;
