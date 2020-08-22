@@ -330,6 +330,7 @@ void ModbusResponse::setErrorResponse(uint8_t errorCode) {
     _length = 5;
   }
   _index = 0;
+  _error = static_cast<esp32Modbus::Error>(errorCode);
   add(_request->getSlaveAddress());
   add(_request->getFunctionCode() | 0x80);
   add(errorCode);

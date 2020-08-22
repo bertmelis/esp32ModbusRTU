@@ -56,7 +56,7 @@ void esp32ModbusRTU::begin(int coreID /* = -1 */) {
   xTaskCreatePinnedToCore((TaskFunction_t)&_handleConnection, "esp32ModbusRTU", 4096, this, 5, &_task, coreID >= 0 ? coreID : NULL);
   // silent interval is at least 3.5x character time
   // _interval = 35000000UL / _serial->baudRate();  // 3.5 * 10 bits * 1000 µs * 1000 ms / baud
-  _interval = 40000000UL / _serial->baudRate();  // 3.5 * 10 bits * 1000 µs * 1000 ms / baud
+  _interval = 40000000UL / _serial->baudRate();  // 4 * 10 bits * 1000 µs * 1000 ms / baud
 
   // The following is okay for sending at any baud rate, but problematic at receiving with baud rates above 35000,
   // since the calculated interval will be below 1000µs!
