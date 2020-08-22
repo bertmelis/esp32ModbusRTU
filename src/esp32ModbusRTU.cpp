@@ -229,8 +229,11 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
           bufferBlocks++;
           uint8_t *temp = new uint8_t[bufferBlocks * BUFBLOCKSIZE];
           memcpy(temp, buffer, (bufferBlocks - 1) * BUFBLOCKSIZE);
-          delete buffer;
-          buffer = temp;
+          // Use intermediate pointer temp2 to keep cppcheck happy
+          uint8_t temp2 = temp;
+          temp = buffer;
+          buffer = temp2;
+          delete temp;
         }
         // Rewind timer
         _lastMicros = micros();
