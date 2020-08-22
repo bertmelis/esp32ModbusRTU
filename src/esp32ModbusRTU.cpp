@@ -212,7 +212,7 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
       if (_serial->available()) {
         state = IN_PACKET;
         _lastMicros = micros();
-      } else if(millis() - TimeOut >= TimeOutValue) {
+      } else if (millis() - TimeOut >= TimeOutValue) {
         errorCode = esp32Modbus::TIMEOUT;
         state = ERROR_EXIT;
       }
