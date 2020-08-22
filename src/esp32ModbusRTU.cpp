@@ -224,27 +224,40 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
     // IN_PACKET: read data until a gap of at least _interval time passed without another byte arriving
     case IN_PACKET:
       // Data waiting and space left in buffer?
-      while (bufferPtr < bufferBlocks * BUFBLOCKSIZE && _serial->available()) {
+      while (_serial->available()) {
         // Yes. Catch the byte
         buffer[bufferPtr++] = _serial->read();
+        // Buffer full?
+        if(bufferPtr >= bufferBlocks * BUFBLOCKSIZE) {
+          // Yes. Extend it by another block
+          bufferBlocks++;
+          uint8_t *temp = new uint8_t[bufferBlocks * BUFBLOCKSIZE];
+          memcpy(temp, buffer, (bufferBlocks - 1) * BUFBLOCKSIZE);
+          delete buffer;
+          buffer = temp;
+        }
         // Rewind timer
         _lastMicros = micros();
       }
-      // Buffer full?
-      if(bufferPtr >= bufferBlocks * BUFBLOCKSIZE) {
-        // Yes. Extend it by another block
-        bufferBlocks++;
-        uint8_t *temp = new uint8_t[bufferBlocks * BUFBLOCKSIZE];
-        memcpy(temp, buffer, (bufferBlocks - 1) * BUFBLOCKSIZE);
-        delete buffer;
-        buffer = temp;
-      }
       // Gap of at least _interval micro seconds passed without data?
-      // if(micros() - _lastMicros >= _interval) {
-      // The above line is the theory - in practice the FIFO copy process into
-      // the Serial buffer takes much longer than that. In lieu of a better
-      // solution we will use 16ms(!) instead of _interval :(
+      // ***********************************************
+      // Important notice!
+      // Due to an implementation decision done in the ESP32 Arduino core code,
+      // the correct time to detect a gap of _interval µs is not effective, as
+      // the core FIFO handling takes much longer than that.
+      //
+      // Workaround: uncomment the following line to wait for 16ms(!) for the handling to finish:
       if(micros() - _lastMicros >= 16000) {
+      //
+      // Alternate solution: is to modify the uartEnableInterrupt() function in
+      // the core implementation file 'esp32-hal-uart.c', to have the line
+      //    'uart->dev->conf1.rxfifo_full_thrhd = 1; // 112;'
+      // This will change the number of bytes received to trigger the copy interrupt 
+      // from 112 (as is implemented in the core) to 1, effectively firing the interrupt
+      // for any single byte.
+      // Then you may uncomment the line below instead:
+      // if(micros() - _lastMicros >= _interval) {
+      //
         state = DATA_READ;
       }
       break;
