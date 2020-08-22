@@ -103,7 +103,8 @@ uint16_t make_word(uint8_t high, uint8_t low) {
 ModbusMessage::ModbusMessage(uint8_t length) :
   _buffer(nullptr),
   _length(length),
-  _index(0) {
+  _index(0),
+  _token(0) {
   if (length < 5) _length = 5;  // minimum for Modbus Exception codes
   _buffer = new uint8_t[_length];
   for (uint8_t i = 0; i < _length; ++i) {
@@ -123,6 +124,10 @@ uint8_t ModbusMessage::getSize() {
   return _index;
 }
 
+uint32_t ModbusMessage::getToken() {
+  return _token;
+}
+
 void ModbusMessage::add(uint8_t value) {
   if (_index < _length) _buffer[_index++] = value;
 }
@@ -134,16 +139,25 @@ ModbusRequest::ModbusRequest(uint8_t length) :
   _address(0),
   _byteCount(0) {}
 
-  uint16_t ModbusRequest::getAddress() {
+uint16_t ModbusRequest::getAddress() {
   return _address;
 }
 
-ModbusRequest02::ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils) :
+uint8_t ModbusRequest::getSlaveAddress() {
+  return _slaveAddress;
+}
+
+uint8_t ModbusRequest::getFunctionCode() {
+  return _functionCode;
+}
+
+ModbusRequest02::ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils, uint32_t token) :
   ModbusRequest(8) {
   _slaveAddress = slaveAddress;
   _functionCode = esp32Modbus::READ_DISCR_INPUT;
   _address = address;
   _byteCount = numberCoils / 8 + 1;
+  _token = token;
   add(_slaveAddress);
   add(_functionCode);
   add(high(_address));
@@ -155,16 +169,13 @@ ModbusRequest02::ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_
   add(high(CRC));
 }
 
-size_t ModbusRequest02::responseLength() {
-  return 5 + _byteCount;
-}
-
-ModbusRequest03::ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters) :
+ModbusRequest03::ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint32_t token) :
   ModbusRequest(12) {
   _slaveAddress = slaveAddress;
   _functionCode = esp32Modbus::READ_HOLD_REGISTER;
   _address = address;
   _byteCount = numberRegisters * 2;  // register is 2 bytes wide
+  _token = token;
   add(_slaveAddress);
   add(_functionCode);
   add(high(_address));
@@ -176,16 +187,13 @@ ModbusRequest03::ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_
   add(high(CRC));
 }
 
-size_t ModbusRequest03::responseLength() {
-  return 5 + _byteCount;
-}
-
-ModbusRequest04::ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters) :
+ModbusRequest04::ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint32_t token) :
   ModbusRequest(8) {
   _slaveAddress = slaveAddress;
   _functionCode = esp32Modbus::READ_INPUT_REGISTER;
   _address = address;
   _byteCount = numberRegisters * 2;  // register is 2 bytes wide
+  _token = token;
   add(_slaveAddress);
   add(_functionCode);
   add(high(_address));
@@ -197,17 +205,13 @@ ModbusRequest04::ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_
   add(high(CRC));
 }
 
-size_t ModbusRequest04::responseLength() {
-  // slaveAddress (1) + functionCode (1) + byteCount (1) + length x 2 + CRC (2)
-  return 5 + _byteCount;
-}
-
-ModbusRequest06::ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_t data) :
+ModbusRequest06::ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_t data, uint32_t token) :
   ModbusRequest(8) {
   _slaveAddress = slaveAddress;
   _functionCode = esp32Modbus::WRITE_HOLD_REGISTER;
   _address = address;
   _byteCount = 2;  // 1 register is 2 bytes wide
+  _token = token;
   add(_slaveAddress);
   add(_functionCode);
   add(high(_address));
@@ -219,16 +223,13 @@ ModbusRequest06::ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_
   add(high(CRC));
 }
 
-size_t ModbusRequest06::responseLength() {
-  return 8;
-}
-
-ModbusRequest16::ModbusRequest16(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data) :
+ModbusRequest16::ModbusRequest16(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data, uint32_t token) :
   ModbusRequest(9 + (numberRegisters * 2)) {
   _slaveAddress = slaveAddress;
   _functionCode = esp32Modbus::WRITE_MULT_REGISTERS;
   _address = address;
   _byteCount = numberRegisters * 2;  // register is 2 bytes wide
+  _token = token;
   add(_slaveAddress);
   add(_functionCode);
   add(high(_address));
@@ -244,39 +245,41 @@ ModbusRequest16::ModbusRequest16(uint8_t slaveAddress, uint16_t address, uint16_
   add(high(CRC));
 }
 
-size_t ModbusRequest16::responseLength() {
-  return 8;
+ModbusRequestRaw::ModbusRequestRaw(uint8_t slaveAddress, uint8_t functionCode, uint16_t dataLength, uint8_t* data, uint32_t token) :
+  ModbusRequest(dataLength + 4) {
+  _slaveAddress = slaveAddress;
+  _functionCode = functionCode;
+  _address = 0;
+  _byteCount = dataLength + 2;
+  _token = token;
+  add(_slaveAddress);
+  add(_functionCode);
+  for (int i = 0; i < dataLength; i++) {
+      add(data[i]);
+    }
+  uint16_t CRC = CRC16(_buffer, _byteCount);
+  add(low(CRC));
+  add(high(CRC));
 }
 
 ModbusResponse::ModbusResponse(uint8_t length, ModbusRequest* request) :
   ModbusMessage(length),
   _request(request),
-  _error(esp32Modbus::SUCCES) {}
-
-bool ModbusResponse::isComplete() {
-  if (_buffer[1] > 0x80 && _index == 5) {  // 5: slaveAddress(1), errorCode(1), CRC(2) + indexed
-    return true;
-  }
-  if (_index == _request->responseLength()) return true;
-  return false;
-}
+  _error(esp32Modbus::SUCCES) { _token = request->getToken(); }
 
 bool ModbusResponse::isSucces() {
-  if (!isComplete()) {
-    _error = esp32Modbus::TIMEOUT;
-  } else if (_buffer[1] > 0x80) {
+  if (_buffer[1] > 0x80) {
     _error = static_cast<esp32Modbus::Error>(_buffer[2]);
   } else if (!checkCRC()) {
     _error = esp32Modbus::CRC_ERROR;
+  } else if (_buffer[0] != _request->getSlaveAddress()) {
+    _error = esp32Modbus::INVALID_SLAVE;
   // TODO(bertmelis): add other checks
-  } else {
-    _error = esp32Modbus::SUCCES;
   }
   if (_error == esp32Modbus::SUCCES) {
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 
 bool ModbusResponse::checkCRC() {
@@ -296,14 +299,50 @@ uint8_t ModbusResponse::getSlaveAddress() {
   return _buffer[0];
 }
 
-esp32Modbus::FunctionCode ModbusResponse::getFunctionCode() {
-  return static_cast<esp32Modbus::FunctionCode>(_buffer[1]);
+uint8_t ModbusResponse::getFunctionCode() {
+  return _buffer[1];
 }
 
 uint8_t* ModbusResponse::getData() {
-  return &_buffer[3];
+  uint8_t fc = _request->getFunctionCode();
+  if (fc == 0x01 || fc == 0x02 || fc == 0x03 || fc == 0x04) {
+    return &_buffer[3];
+  } else {
+    return &_buffer[2];
+  }
 }
 
 uint8_t ModbusResponse::getByteCount() {
-  return _buffer[2];
+  uint8_t fc = _request->getFunctionCode();
+  if (fc == 0x01 || fc == 0x02 || fc == 0x03 || fc == 0x04) {
+    return _buffer[2];
+  } else {
+    return _index - 2;
+  }
+}
+
+void ModbusResponse::setErrorResponse(uint8_t errorCode) {
+  if (_length != 5) {
+    delete _buffer;
+    _buffer = new uint8_t[5];
+    _length = 5;
+  }
+  _index = 0;
+  _error = static_cast<esp32Modbus::Error>(errorCode);
+  add(_request->getSlaveAddress());
+  add(_request->getFunctionCode() | 0x80);
+  add(errorCode);
+  uint16_t CRC = CRC16(_buffer, 3);
+  add(low(CRC));
+  add(high(CRC));
+}
+
+void ModbusResponse::setData(uint16_t dataLength, uint8_t *data) {
+  if (_length != dataLength) {
+    delete _buffer;
+    _buffer = new uint8_t[dataLength];
+    _length = dataLength;
+  }
+  _index = dataLength;
+  memcpy(_buffer, data, dataLength);
 }

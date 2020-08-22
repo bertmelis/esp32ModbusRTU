@@ -27,6 +27,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdint.h>  // for uint*_t
 #include <stddef.h>  // for size_t
+#include <cstring>  // for memcpy
 
 #include "esp32ModbusTypeDefs.h"
 
@@ -37,6 +38,7 @@ class ModbusMessage {
   virtual ~ModbusMessage();
   uint8_t* getMessage();
   uint8_t getSize();
+  uint32_t getToken();
   void add(uint8_t value);
 
  protected:
@@ -44,14 +46,16 @@ class ModbusMessage {
   uint8_t* _buffer;
   uint8_t _length;
   uint8_t _index;
+  uint32_t _token;
 };
 
 class ModbusResponse;  // forward declare for use in ModbusRequest
 
 class ModbusRequest : public ModbusMessage {
  public:
-  virtual size_t responseLength() = 0;
   uint16_t getAddress();
+  uint8_t getFunctionCode();
+  uint8_t getSlaveAddress();
 
  protected:
   explicit ModbusRequest(uint8_t length);
@@ -64,50 +68,52 @@ class ModbusRequest : public ModbusMessage {
 // read discrete coils
 class ModbusRequest02 : public ModbusRequest {
  public:
-  explicit ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils);
-  size_t responseLength();
+  explicit ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_t numberCoils, uint32_t token = 0);
 };
 
 // read holding registers
 class ModbusRequest03 : public ModbusRequest {
  public:
-  explicit ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters);
-  size_t responseLength();
+  explicit ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint32_t token = 0);
 };
 
 // read input registers
 class ModbusRequest04 : public ModbusRequest {
  public:
-  explicit ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters);
-  size_t responseLength();
+  explicit ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint32_t token = 0);
 };
 
 // write single holding registers
 class ModbusRequest06 : public ModbusRequest {
  public:
-  explicit ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_t data);
-  size_t responseLength();
+  explicit ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_t data, uint32_t token = 0);
 };
 
 // write multiple holding registers
 class ModbusRequest16 : public ModbusRequest {
  public:
-  explicit ModbusRequest16(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data);
-  size_t responseLength();
+  explicit ModbusRequest16(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data, uint32_t token = 0);
+};
+
+// "raw" request based on a request packet obtained as is.
+class ModbusRequestRaw : public ModbusRequest {
+ public:
+  explicit ModbusRequestRaw(uint8_t slaveAddress, uint8_t functionCode, uint16_t dataLength, uint8_t* data, uint32_t token = 0);
 };
 
 class ModbusResponse : public ModbusMessage {
  public:
   explicit ModbusResponse(uint8_t length, ModbusRequest* request);
-  bool isComplete();
   bool isSucces();
   bool checkCRC();
   esp32Modbus::Error getError() const;
 
   uint8_t getSlaveAddress();
-  esp32Modbus::FunctionCode getFunctionCode();
+  uint8_t getFunctionCode();
   uint8_t* getData();
   uint8_t getByteCount();
+  void setErrorResponse(uint8_t errorCode);
+  void setData(uint16_t dataLength, uint8_t *data);
 
  private:
   ModbusRequest* _request;

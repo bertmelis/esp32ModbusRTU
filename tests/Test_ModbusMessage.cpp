@@ -17,7 +17,7 @@ TEST_CASE("Read input registers", "[FC04]") {
   REQUIRE(request->getSize() == sizeof(stdMessage));
   REQUIRE_THAT(request->getMessage(), ByteArrayEqual(stdMessage, sizeof(stdMessage)));
 
-  esp32ModbusRTUInternals::ModbusResponse* response = new esp32ModbusRTUInternals::ModbusResponse(request->responseLength(), request);
+  esp32ModbusRTUInternals::ModbusResponse* response = new esp32ModbusRTUInternals::ModbusResponse(7, request);
 
   SECTION("normal response") {
     for (uint8_t i = 0; i < sizeof(stdResponse); ++i) {
@@ -48,7 +48,7 @@ TEST_CASE("Write multiple holding registers", "[FC16]") {
   REQUIRE(request->getSize() == sizeof(stdMessage));
   REQUIRE_THAT(request->getMessage(), ByteArrayEqual(stdMessage, sizeof(stdMessage)));
 
-  esp32ModbusRTUInternals::ModbusResponse* response = new esp32ModbusRTUInternals::ModbusResponse(request->responseLength(), request);
+  esp32ModbusRTUInternals::ModbusResponse* response = new esp32ModbusRTUInternals::ModbusResponse(8, request);
 
   SECTION("normal response") {
     for (uint8_t i = 0; i < sizeof(stdResponse); ++i) {
