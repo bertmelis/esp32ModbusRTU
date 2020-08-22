@@ -182,7 +182,7 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
   register uint16_t bufferPtr = 0;
 
   // State machine states
-  enum STATES : uint8_t { WAIT_INTERVAL=0, WAIT_DATA, IN_PACKET, DATA_READ, ERROR_EXIT, FINISHED };
+  enum STATES : uint8_t { WAIT_INTERVAL = 0, WAIT_DATA, IN_PACKET, DATA_READ, ERROR_EXIT, FINISHED };
   register STATES state = WAIT_INTERVAL;
 
   // Timeout tracker
@@ -194,29 +194,25 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
   // Return data object
   ModbusResponse* response = nullptr;
 
-  while(state != FINISHED)
-  {
-    switch(state)
-    {
+  while (state != FINISHED) {
+    switch (state) {
     // WAIT_INTERVAL: spend the remainder of the bus quiet time waiting
     case WAIT_INTERVAL:
       // Time passed?
-      if(micros() - _lastMicros >= _interval) {
+      if (micros() - _lastMicros >= _interval) {
         // Yes, proceed to reading data
         state = WAIT_DATA;
-      }
-      else {
+      } else {
         // No, wait a little longer
         delayMicroseconds(1);
       }
       break;
     // WAIT_DATA: await first data byte, but watch timeout
     case WAIT_DATA:
-      if(_serial->available()) {
+      if (_serial->available()) {
         state = IN_PACKET;
         _lastMicros = micros();
-      }
-      else if(millis() - TimeOut >= TimeOutValue) {
+      } else if(millis() - TimeOut >= TimeOutValue) {
         errorCode = esp32Modbus::TIMEOUT;
         state = ERROR_EXIT;
       }
@@ -228,7 +224,7 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
         // Yes. Catch the byte
         buffer[bufferPtr++] = _serial->read();
         // Buffer full?
-        if(bufferPtr >= bufferBlocks * BUFBLOCKSIZE) {
+        if (bufferPtr >= bufferBlocks * BUFBLOCKSIZE) {
           // Yes. Extend it by another block
           bufferBlocks++;
           uint8_t *temp = new uint8_t[bufferBlocks * BUFBLOCKSIZE];
@@ -247,16 +243,16 @@ ModbusResponse* esp32ModbusRTU::_receive(ModbusRequest* request) {
       // the core FIFO handling takes much longer than that.
       //
       // Workaround: uncomment the following line to wait for 16ms(!) for the handling to finish:
-      if(micros() - _lastMicros >= 16000) {
+      if (micros() - _lastMicros >= 16000) {
       //
       // Alternate solution: is to modify the uartEnableInterrupt() function in
       // the core implementation file 'esp32-hal-uart.c', to have the line
       //    'uart->dev->conf1.rxfifo_full_thrhd = 1; // 112;'
-      // This will change the number of bytes received to trigger the copy interrupt 
+      // This will change the number of bytes received to trigger the copy interrupt
       // from 112 (as is implemented in the core) to 1, effectively firing the interrupt
       // for any single byte.
       // Then you may uncomment the line below instead:
-      // if(micros() - _lastMicros >= _interval) {
+      // if (micros() - _lastMicros >= _interval) {
       //
         state = DATA_READ;
       }

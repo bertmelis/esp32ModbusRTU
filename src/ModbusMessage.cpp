@@ -305,26 +305,24 @@ uint8_t ModbusResponse::getFunctionCode() {
 
 uint8_t* ModbusResponse::getData() {
   uint8_t fc = _request->getFunctionCode();
-  if(fc == 0x01 || fc == 0x02 || fc == 0x03 || fc == 0x04) {
+  if (fc == 0x01 || fc == 0x02 || fc == 0x03 || fc == 0x04) {
     return &_buffer[3];
-  }
-  else {
+  } else {
     return &_buffer[2];
   }
 }
 
 uint8_t ModbusResponse::getByteCount() {
   uint8_t fc = _request->getFunctionCode();
-  if(fc == 0x01 || fc == 0x02 || fc == 0x03 || fc == 0x04) {
+  if (fc == 0x01 || fc == 0x02 || fc == 0x03 || fc == 0x04) {
     return _buffer[2];
-  }
-  else {
+  } else {
     return _index - 2;
   }
 }
 
 void ModbusResponse::setErrorResponse(uint8_t errorCode) {
-  if(_length != 5) {
+  if (_length != 5) {
     delete _buffer;
     _buffer = new uint8_t[5];
     _length = 5;
@@ -340,7 +338,7 @@ void ModbusResponse::setErrorResponse(uint8_t errorCode) {
 }
 
 void ModbusResponse::setData(uint16_t dataLength, uint8_t *data) {
-  if(_length != dataLength) {
+  if (_length != dataLength) {
     delete _buffer;
     _buffer = new uint8_t[dataLength];
     _length = dataLength;
