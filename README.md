@@ -12,6 +12,9 @@ This is a non blocking Modbus client (master) for ESP32.
   -  read discrete inputs (02)
   -  read holding registers (03)
   -  read input registers (04)
+  -  write single holding register (06)
+  -  write multiple holding register (16)
+  -  "raw" requests for arbitrary function codes
 -  similar API as my [esp32ModbusTCP](https://github.com/bertmelis/esp32ModbusTCP) implementation
 
 ## Developement status
@@ -64,7 +67,8 @@ is connected via a 100 Ohms resistor to limit possible ground loop currents.
 
 The API is quite lightweight. It takes minimal 3 steps to get going.
 
-First create the ModbusRTU object. The constructor takes two arguments: HardwareSerial object and pin number of DE/RS.
+First create the ModbusRTU object. The constructor takes two arguments: HardwareSerial object and pin number of DE/RS (or -1, if 
+your module does auto half duplex).
 
 ```C++
 esp32ModbusRTU myModbus(&Serial, DE_PIN);
@@ -119,11 +123,22 @@ The request queue holds maximum 20 items. So a 21st request will fail until the 
 #define QUEUE_SIZE 20
 ```
 
-The waiting time before a timeout error is returned can also be changed by a `#define` variable:
+The waiting time before a timeout error is returned can also be changed by a method call:
 
 ```C++
-#define TIMEOUT_MS 5000
+myModbus.setTimeOutValue(5000);
 ```
+
+## Caveat
+
+The ESP32 Arduino core implementation of the handling of Serial interfaces has a design decision built in that prevents real time
+Serial communications for data packets received larger than 112 bytes. the underlying FIFO buffer is only copied into the Serial's buffer 
+when 112 bytes have been received. The copy process then takes longer than the MODBUS timeout lasts, so the remainder of the packet is lost. 
+
+The library has a workaround built in that covers the issue by waiting a loooong time (16 milliseconds) until determining a bus timeout (= end
+of packet). This is possible since the library implements a MODBUS master device, thus controlling the bus timing.
+
+But note that this is not according to MODBUS standards.
 
 ## Issues
 
