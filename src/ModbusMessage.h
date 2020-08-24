@@ -53,7 +53,6 @@ class ModbusResponse;  // forward declare for use in ModbusRequest
 
 class ModbusRequest : public ModbusMessage {
  public:
-  uint16_t getAddress();
   uint8_t getFunctionCode();
   uint8_t getSlaveAddress();
 
@@ -61,7 +60,6 @@ class ModbusRequest : public ModbusMessage {
   explicit ModbusRequest(uint8_t length);
   uint8_t _slaveAddress;
   uint8_t _functionCode;
-  uint16_t _address;
   uint16_t _byteCount;
 };
 

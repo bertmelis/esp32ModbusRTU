@@ -136,12 +136,7 @@ ModbusRequest::ModbusRequest(uint8_t length) :
   ModbusMessage(length),
   _slaveAddress(0),
   _functionCode(0),
-  _address(0),
   _byteCount(0) {}
-
-uint16_t ModbusRequest::getAddress() {
-  return _address;
-}
 
 uint8_t ModbusRequest::getSlaveAddress() {
   return _slaveAddress;
@@ -155,13 +150,12 @@ ModbusRequest02::ModbusRequest02(uint8_t slaveAddress, uint16_t address, uint16_
   ModbusRequest(8) {
   _slaveAddress = slaveAddress;
   _functionCode = esp32Modbus::READ_DISCR_INPUT;
-  _address = address;
   _byteCount = numberCoils / 8 + 1;
   _token = token;
   add(_slaveAddress);
   add(_functionCode);
-  add(high(_address));
-  add(low(_address));
+  add(high(address));
+  add(low(address));
   add(high(numberCoils));
   add(low(numberCoils));
   uint16_t CRC = CRC16(_buffer, 6);
@@ -173,13 +167,12 @@ ModbusRequest03::ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_
   ModbusRequest(12) {
   _slaveAddress = slaveAddress;
   _functionCode = esp32Modbus::READ_HOLD_REGISTER;
-  _address = address;
   _byteCount = numberRegisters * 2;  // register is 2 bytes wide
   _token = token;
   add(_slaveAddress);
   add(_functionCode);
-  add(high(_address));
-  add(low(_address));
+  add(high(address));
+  add(low(address));
   add(high(numberRegisters));
   add(low(numberRegisters));
   uint16_t CRC = CRC16(_buffer, 6);
@@ -191,13 +184,12 @@ ModbusRequest04::ModbusRequest04(uint8_t slaveAddress, uint16_t address, uint16_
   ModbusRequest(8) {
   _slaveAddress = slaveAddress;
   _functionCode = esp32Modbus::READ_INPUT_REGISTER;
-  _address = address;
   _byteCount = numberRegisters * 2;  // register is 2 bytes wide
   _token = token;
   add(_slaveAddress);
   add(_functionCode);
-  add(high(_address));
-  add(low(_address));
+  add(high(address));
+  add(low(address));
   add(high(numberRegisters));
   add(low(numberRegisters));
   uint16_t CRC = CRC16(_buffer, 6);
@@ -209,13 +201,12 @@ ModbusRequest06::ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_
   ModbusRequest(8) {
   _slaveAddress = slaveAddress;
   _functionCode = esp32Modbus::WRITE_HOLD_REGISTER;
-  _address = address;
   _byteCount = 2;  // 1 register is 2 bytes wide
   _token = token;
   add(_slaveAddress);
   add(_functionCode);
-  add(high(_address));
-  add(low(_address));
+  add(high(address));
+  add(low(address));
   add(high(data));
   add(low(data));
   uint16_t CRC = CRC16(_buffer, 6);
@@ -227,13 +218,12 @@ ModbusRequest16::ModbusRequest16(uint8_t slaveAddress, uint16_t address, uint16_
   ModbusRequest(9 + (numberRegisters * 2)) {
   _slaveAddress = slaveAddress;
   _functionCode = esp32Modbus::WRITE_MULT_REGISTERS;
-  _address = address;
   _byteCount = numberRegisters * 2;  // register is 2 bytes wide
   _token = token;
   add(_slaveAddress);
   add(_functionCode);
-  add(high(_address));
-  add(low(_address));
+  add(high(address));
+  add(low(address));
   add(high(numberRegisters));
   add(low(numberRegisters));
   add(_byteCount);
@@ -249,7 +239,6 @@ ModbusRequestRaw::ModbusRequestRaw(uint8_t slaveAddress, uint8_t functionCode, u
   ModbusRequest(dataLength + 4) {
   _slaveAddress = slaveAddress;
   _functionCode = functionCode;
-  _address = 0;
   _byteCount = dataLength + 2;
   _token = token;
   add(_slaveAddress);

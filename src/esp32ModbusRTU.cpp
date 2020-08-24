@@ -132,7 +132,6 @@ void esp32ModbusRTU::_handleConnection(esp32ModbusRTU* instance) {
           instance->_onData(
             response->getSlaveAddress(),
             response->getFunctionCode(),
-            request->getAddress(),
             response->getData(),
             response->getByteCount());
         // else, if the token onData handler is set, call that
@@ -140,7 +139,6 @@ void esp32ModbusRTU::_handleConnection(esp32ModbusRTU* instance) {
           instance->_onDataToken(
             response->getSlaveAddress(),
             response->getFunctionCode(),
-            request->getAddress(),
             response->getData(),
             response->getByteCount(),
             response->getToken());
