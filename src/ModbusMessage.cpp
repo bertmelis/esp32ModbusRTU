@@ -160,7 +160,7 @@ size_t ModbusRequest02::responseLength() {
 }
 
 ModbusRequest03::ModbusRequest03(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters) :
-  ModbusRequest(12) {
+  ModbusRequest(8) {
   _slaveAddress = slaveAddress;
   _functionCode = esp32Modbus::READ_HOLD_REGISTER;
   _address = address;
