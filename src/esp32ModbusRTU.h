@@ -57,6 +57,8 @@ class esp32ModbusRTU {
   bool readInputRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters);
   bool writeSingleHoldingRegister(uint8_t slaveAddress, uint16_t address, uint16_t data);
   bool writeMultHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data);
+  bool writeSingleCoil(uint8_t slaveAddress, uint16_t address, uint16_t data);
+  bool writeMultiCoils(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data);
   void onData(esp32Modbus::MBRTUOnData handler);
   void onError(esp32Modbus::MBRTUOnError handler);
   void setTimeOutValue(uint32_t tov);

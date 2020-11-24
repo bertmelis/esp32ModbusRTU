@@ -82,10 +82,24 @@ class ModbusRequest04 : public ModbusRequest {
   size_t responseLength();
 };
 
+// write single coil
+class ModbusRequest05 : public ModbusRequest {
+ public:
+  explicit ModbusRequest05(uint8_t slaveAddress, uint16_t address, uint16_t data);
+  size_t responseLength();
+};
+
 // write single holding registers
 class ModbusRequest06 : public ModbusRequest {
  public:
   explicit ModbusRequest06(uint8_t slaveAddress, uint16_t address, uint16_t data);
+  size_t responseLength();
+};
+
+// write multiple coils
+class ModbusRequest15 : public ModbusRequest {
+ public:
+  explicit ModbusRequest15(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data);
   size_t responseLength();
 };
 
