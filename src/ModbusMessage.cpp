@@ -250,19 +250,22 @@ ModbusRequest15::ModbusRequest15(uint8_t slaveAddress, uint16_t address, uint16_
   _slaveAddress = slaveAddress;
   _functionCode = esp32Modbus::WRITE_MULT_COILS;
   _address = address;
-  _byteCount = numberRegisters; 
+  _byteCount = ((int)(1-1)/8 + 1); 
   add(_slaveAddress);
   add(_functionCode);
   add(high(_address));
   add(low(_address));
-  add(high(_byteCount));
-  add(low(_byteCount));
-  for (uint16_t i = 0; i < numberRegisters;i++)
+  add(high(numberRegisters));
+  add(low(numberRegisters));
+  add(_byteCount);
+  for (uint16_t i = 0; i < _byteCount;i++)
     add(data[i]);
-  uint16_t CRC = CRC16(_buffer, (8 + numberRegisters));
+  
+  uint16_t CRC = CRC16(_buffer, (7+_byteCount) );
   add(low(CRC));
   add(high(CRC));
 }
+
 
 size_t ModbusRequest15::responseLength() {
   return 8;

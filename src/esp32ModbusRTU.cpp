@@ -84,7 +84,7 @@ bool esp32ModbusRTU::writeSingleCoil(uint8_t slaveAddress, uint16_t address, uin
   return _addToQueue(request);
 }
 
-// data is array of coils grouped by 15 coils per byte. numberRegisters is # bytes needed
+// data is array of coils grouped by 15 coils per byte. numberRegisters is # coils
 bool esp32ModbusRTU::writeMultiCoils(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters, uint8_t* data) {
   ModbusRequest* request = new ModbusRequest15(slaveAddress, address, numberRegisters, data);
   return _addToQueue(request);
