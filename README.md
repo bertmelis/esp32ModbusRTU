@@ -1,3 +1,9 @@
+# ARCHIVED
+
+This repo is archived no longer actively maintained.
+
+For a complete Modbus library for ESP32, I invite you to https://github.com/ESP32ModbusUnified/eModbus
+
 # esp32ModbusRTU
 
 [![Build Status](https://travis-ci.com/bertmelis/esp32ModbusRTU.svg?branch=master)](https://travis-ci.com/bertmelis/esp32ModbusRTU)
